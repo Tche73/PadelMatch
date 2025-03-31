@@ -10,4 +10,19 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Commands\Interfaces\" />
+    <Folder Include="Commands\Reservations\" />
+    <Folder Include="Commands\Users\" />
+    <Folder Include="DTO%27s\" />
+    <Folder Include="Factories\" />
+    <Folder Include="Builders\" />
+    <Folder Include="Validators\" />
+    <Folder Include="Queries\Interfaces\" />
+    <Folder Include="Queries\Reservations\" />
+    <Folder Include="Queries\Users\" />
+    <Folder Include="Services\Implementations\" />
+    <Folder Include="Services\Interfaces\" />
+  </ItemGroup>
+
 </Project>
