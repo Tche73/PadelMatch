@@ -21,8 +21,10 @@
     <Folder Include="Queries\Interfaces\" />
     <Folder Include="Queries\Reservations\" />
     <Folder Include="Queries\Users\" />
-    <Folder Include="Services\Implementations\" />
-    <Folder Include="Services\Interfaces\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
 
 </Project>
