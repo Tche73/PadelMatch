@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PadelMatch", "PadelMatch\PadelMatch.csproj", "{045254DB-CF6A-4F7A-B097-21CAF7ECE061}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PadelMatch", "PadelMatch\PadelMatch.csproj", "{045254DB-CF6A-4F7A-B097-21CAF7ECE061}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{0E0B1333-F5D3-463D-A705-A3CE8F83EDE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{0E0B1333-F5D3-463D-A705-A3CE8F83EDE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{A74201A1-C515-44FF-8096-3C7DF8DA07CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\Application.csproj", "{A74201A1-C515-44FF-8096-3C7DF8DA07CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructures", "Infrastructures\Infrastructures.csproj", "{732231E6-CC4E-4766-A684-BE57D9E23D87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructures", "Infrastructures\Infrastructures.csproj", "{732231E6-CC4E-4766-A684-BE57D9E23D87}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "PadelMatchDB", "PadelMatchDB\PadelMatchDB.sqlproj", "{9136B02E-1B24-483A-947A-72327B4C680D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,12 @@ Global
 		{732231E6-CC4E-4766-A684-BE57D9E23D87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{732231E6-CC4E-4766-A684-BE57D9E23D87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{732231E6-CC4E-4766-A684-BE57D9E23D87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9136B02E-1B24-483A-947A-72327B4C680D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9136B02E-1B24-483A-947A-72327B4C680D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9136B02E-1B24-483A-947A-72327B4C680D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{9136B02E-1B24-483A-947A-72327B4C680D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9136B02E-1B24-483A-947A-72327B4C680D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9136B02E-1B24-483A-947A-72327B4C680D}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
