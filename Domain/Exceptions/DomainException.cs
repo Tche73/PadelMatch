@@ -10,3 +10,4 @@ namespace Domain.Exceptions
     {
     }
 }
+ 

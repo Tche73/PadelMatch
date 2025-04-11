@@ -17,23 +17,31 @@ namespace Infrastructures
 
         public IRepository<SkillLevel> SkillLevels { get; private set; }
 
-        public IRepository<Availability> Availabilities { get; private set; }
+        public IAvailabilityRepository Availabilities { get; private set; }
 
-        public IRepository<Court> Courts { get; private set; }
+        public ICourtRepository Courts { get; private set; }
 
         public IReservationRepository Reservations { get; private set; }
 
         public IMatchRepository Matches { get; private set; }
 
         public IRepository<MatchPlayer> MatchPlayers { get; private set; }
-
-        public IRepository<PlayerStats> PlayerStats { get; private set; }
+     
+        public IPlayerStatsRepository PlayerStats { get; private set; }
 
         public UnitOfWork(PadelMatchDbContext context)
         {
             _context = context;
 
             Users = new UserRepository(_context);
+            SkillLevels = new Repository<SkillLevel>(_context);
+            Availabilities = new AvailabilityRepository(_context);
+            Courts = new CourtRepository(_context);
+            Reservations = new ReservationRepository(_context);
+            Matches = new MatchRepository(_context);
+            MatchPlayers = new Repository<MatchPlayer>(_context);
+            PlayerStats = new PlayerStatsRepository(_context);
+
         }
         public int Complete()
         {

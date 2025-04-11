@@ -1,0 +1,28 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<AuthorizeView>
+    <Authorized>
+        <div class="container mt-5">
+            <div class="jumbotron">
+                <h3 class="display-8">Bienvenue sur PadelMatch</h3>
+                <h5>Bonjour @context.User.Identity?.Name, vous êtes maintenant connecté !</h5>
+                <hr class="my-4">
+                <p>Vous pouvez maintenant accéder à toutes les fonctionnalités de l'application.</p>
+                <a class="btn btn-primary btn-lg" href="/courts">Voir les terrains disponibles</a>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container mt-5">
+            <div class="jumbotron">
+                <h1 class="display-6">Bienvenue sur PadelMatch</h1>
+                <p class="lead">Connectez-vous pour accéder aux fonctionnalités de l'application.</p>
+                <hr class="my-4">
+                <p>PadelMatch vous permet de réserver des terrains et de trouver des partenaires pour jouer au padel.</p>
+                <a class="btn btn-primary btn-lg" href="/login">Se connecter</a>
+                <a class="btn btn-outline-primary btn-lg" href="/register">S'inscrire</a>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

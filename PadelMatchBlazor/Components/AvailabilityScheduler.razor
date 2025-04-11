@@ -1,0 +1,83 @@
+﻿@using Domain.Entities
+@* Components/AvailabilityScheduler.razor *@
+<div class="availability-scheduler">
+    <div class="day-selector">
+        @foreach (var day in DaysOfWeek)
+        {
+            <div class="day @(SelectedDay == day.Value ? "selected" : "")"
+                 @onclick="() => SelectDay(day.Value)">
+                @day.Label
+            </div>
+        }
+    </div>
+
+    <div class="time-slots">
+        @for (int hour = 8; hour < 22; hour++)
+        {
+            var timeSlot = new TimeSpan(hour, 0, 0);
+            var isAvailable = Availabilities.Any(a =>
+            a.DayOfWeek == SelectedDay &&
+            a.StartTime <= timeSlot &&
+            a.EndTime > timeSlot);
+
+            <div class="time-slot @(isAvailable ? "available" : "")"
+                 @onclick="() => ToggleTimeSlot(hour)">
+                @hour.ToString("00"):00
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<Availability> Availabilities { get; set; } = new List<Availability>();
+
+    [Parameter]
+    public EventCallback<List<Availability>> AvailabilitiesChanged { get; set; }
+
+    private int SelectedDay { get; set; } = 1; // Lundi par défaut
+
+    private List<(int Value, string Label)> DaysOfWeek = new List<(int, string)>
+    {
+        (1, "Lun"),
+        (2, "Mar"),
+        (3, "Mer"),
+        (4, "Jeu"),
+        (5, "Ven"),
+        (6, "Sam"),
+        (7, "Dim")
+    };
+
+    private void SelectDay(int day)
+    {
+        SelectedDay = day;
+    }
+
+    private async Task ToggleTimeSlot(int hour)
+    {
+        // Logique pour ajouter/supprimer une disponibilité
+        var startTime = new TimeSpan(hour, 0, 0);
+        var endTime = new TimeSpan(hour + 1, 0, 0);
+
+        var existingAvailability = Availabilities.FirstOrDefault(a =>
+            a.DayOfWeek == SelectedDay &&
+            a.StartTime == startTime);
+
+        if (existingAvailability != null)
+        {
+            Availabilities.Remove(existingAvailability);
+        }
+        else
+        {
+            Availabilities.Add(new Availability
+                {
+                    DayOfWeek = SelectedDay,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    IsRecurring = true
+                });
+        }
+
+        await AvailabilitiesChanged.InvokeAsync(Availabilities);
+    }
+}

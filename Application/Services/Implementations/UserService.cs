@@ -1,5 +1,10 @@
-﻿using Application.Services.Interfaces;
+﻿using Application.DTO_s;
+using Application.Queries;
+using Application.Queries.Interfaces;
+using Application.Services.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
+using Domain.Interface.Repositories;
 using Domain.Interfaces;
 
 namespace Application.Services.Implementations
@@ -8,11 +13,13 @@ namespace Application.Services.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IQueryHandler<FindCompatiblePlayersQuery, IEnumerable<UserDto>> _findCompatiblePlayersQueryHandler;
 
-        public UserService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher)
+        public UserService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IQueryHandler<FindCompatiblePlayersQuery, IEnumerable<UserDto>> findCompatiblePlayersQueryHandler)
         {
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
+            _findCompatiblePlayersQueryHandler = findCompatiblePlayersQueryHandler;
         }
 
         public bool Authenticate(string username, string password)
@@ -29,7 +36,7 @@ namespace Application.Services.Implementations
             return _passwordHasher.VerifyPassword(password, user.PasswordHash);
         }
 
-        public void Create(User user)
+        public void Create(User user, string password, UserRole role = UserRole.User)
         {
             // Vérifier que l'utilisateur n'existe pas déjà
             if (_unitOfWork.Users.GetByUsername(user.Username) != null)
@@ -38,14 +45,16 @@ namespace Application.Services.Implementations
             if (_unitOfWork.Users.GetByEmail(user.Email) != null)
                 throw new InvalidOperationException("Cet email est déjà utilisé.");
 
-            // Hacher le mot de passe
-            user.PasswordHash = _passwordHasher.HashPassword(user.PasswordHash);
+            // Hacher le mot de passe et l'assigner à PasswordHash
+            user.PasswordHash = _passwordHasher.HashPassword(password);
             user.CreatedAt = DateTime.Now;
             user.IsActive = true;
+            user.Role = role;
 
             _unitOfWork.Users.Add(user);
             _unitOfWork.Complete();
         }
+        
 
         public void Delete(int id)
         {
@@ -102,20 +111,87 @@ namespace Application.Services.Implementations
             if (userWithSameEmail != null && userWithSameEmail.Id != user.Id)
                 throw new InvalidOperationException("Cet email est déjà utilisé.");
 
-            // Ne pas écraser le mot de passe existant si aucun nouveau n'est fourni
-            if (string.IsNullOrEmpty(user.PasswordHash))
-            {
-                user.PasswordHash = existingUser.PasswordHash;
-            }
-            else if (user.PasswordHash != existingUser.PasswordHash)
-            {
-                // Si un nouveau mot de passe a été fourni, le hacher
-                user.PasswordHash = _passwordHasher.HashPassword(user.PasswordHash);
-            }
+            existingUser.Email = user.Email;
+            existingUser.FirstName = user.FirstName;
+            existingUser.LastName = user.LastName;
+            existingUser.SkillLevelId = user.SkillLevelId;
 
             _unitOfWork.Users.Update(user);
             _unitOfWork.Complete();
         }
 
+        public void UpdatePassword(int userId, string newPassword)
+        {
+            var user = _unitOfWork.Users.GetById(userId);
+            if (user == null)
+                throw new InvalidOperationException("Utilisateur non trouvé.");
+
+            // Hacher le nouveau mot de passe
+            user.PasswordHash = _passwordHasher.HashPassword(newPassword);
+
+            _unitOfWork.Users.Update(user);
+            _unitOfWork.Complete();
+        }
+
+        public IEnumerable<UserDto> FindCompatiblePlayers(int userId, int skillLevelTolerance = 1)
+        {
+            var query = new FindCompatiblePlayersQuery
+            {
+                UserId = userId,
+                SkillLevelTolerance = skillLevelTolerance
+            };
+
+            return _findCompatiblePlayersQueryHandler.Handle(query);
+        }
+
+        // Ajoutez cette méthode à votre classe UserService existante
+        public IEnumerable<User> SearchPlayers(PlayerSearchRequestDto request)
+        {
+            var query = _unitOfWork.Users.GetAll().Where(u => u.IsActive).AsQueryable();
+
+            // Filtrer par niveau de compétence si spécifié
+            if (request.SkillLevelId.HasValue)
+            {
+                int minLevel = request.SkillLevelId.Value - (request.SkillLevelTolerance ?? 1);
+                int maxLevel = request.SkillLevelId.Value + (request.SkillLevelTolerance ?? 1);
+
+                // S'assurer que les niveaux ne sont pas négatifs
+                minLevel = Math.Max(1, minLevel);
+
+                query = query.Where(u => u.SkillLevelId >= minLevel && u.SkillLevelId <= maxLevel);
+            }
+
+            // Exclure l'utilisateur actuel
+            if (request.CurrentUserId.HasValue)
+            {
+                query = query.Where(u => u.Id != request.CurrentUserId.Value);
+            }
+
+            // Récupérer les utilisateurs filtrés
+            var filteredUsers = query.ToList();
+
+            // Si des critères de disponibilité sont spécifiés, filtrer davantage
+            if (request.DayOfWeek.HasValue || request.StartTime.HasValue || request.EndTime.HasValue)
+            {
+                filteredUsers = filteredUsers.Where(u =>
+                    HasCompatibleAvailability(u.Id, request.DayOfWeek, request.StartTime, request.EndTime)).ToList();
+            }
+
+            return filteredUsers;
+        }
+
+        private bool HasCompatibleAvailability(int userId, int? dayOfWeek, TimeSpan? startTime, TimeSpan? endTime)
+        {
+            // Cette méthode vérifie si l'utilisateur a des disponibilités compatibles
+            var availabilities = _unitOfWork.Availabilities.GetByUserId(userId);
+             
+            if (!dayOfWeek.HasValue && !startTime.HasValue && !endTime.HasValue)
+                return true;
+
+            return availabilities.Any(a =>
+                (!dayOfWeek.HasValue || a.DayOfWeek == dayOfWeek.Value) &&
+                (!startTime.HasValue || a.StartTime <= startTime.Value) &&
+                (!endTime.HasValue || a.EndTime >= endTime.Value));
+        }
     }
 }

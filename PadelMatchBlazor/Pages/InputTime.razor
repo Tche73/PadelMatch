@@ -1,0 +1,37 @@
+@namespace PadelMatchBlazor.Pages
+
+<input type="time" value="@TimeString" @onchange="OnTimeChanged" class="@CssClass" />
+
+@code {
+    [Parameter]
+    public string CssClass { get; set; }
+
+    [Parameter]
+    public TimeSpan? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<TimeSpan?> ValueChanged { get; set; }
+
+    private string TimeString
+    {
+        get => Value?.ToString(@"hh\:mm");
+    }
+
+    private async Task OnTimeChanged(ChangeEventArgs e)
+    {
+        if (e.Value is string timeString && !string.IsNullOrEmpty(timeString))
+        {
+            // Format attendu: "HH:mm"
+            string[] parts = timeString.Split(':');
+            if (parts.Length == 2 && int.TryParse(parts[0], out int hours) && int.TryParse(parts[1], out int minutes))
+            {
+                var newValue = new TimeSpan(hours, minutes, 0);
+                if (newValue != Value)
+                {
+                    Value = newValue;
+                    await ValueChanged.InvokeAsync(newValue);
+                }
+            }
+        }
+    }
+}

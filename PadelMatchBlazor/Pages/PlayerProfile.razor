@@ -1,0 +1,214 @@
+﻿@page "/players/{Id:int}"
+@attribute [Authorize]
+@using DomainPlayerStats = Domain.Entities.PlayerStats
+@using BlazorPlayerStats = PadelMatchBlazor.Models.PlayerStats
+@using Application.Services.Implementations
+@using Domain.Entities
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models
+@using PadelMatchBlazor.Services
+@inject HttpUserService UserService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (user == null)
+    {
+        <div class="alert alert-danger">
+            Joueur non trouvé ou erreur lors du chargement du profil.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3>Profil de @user.FirstName @user.LastName</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <!-- Icône de profil générique -->
+                            <i class="bi bi-person-circle" style="font-size: 6rem;"></i>
+                        </div>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <strong>Niveau :</strong> @user.SkillLevelName
+                            </div>
+                            <div class="list-group-item">
+                                <strong>Nom d'utilisateur :</strong> @user.Username
+                            </div>
+                            <div class="list-group-item">
+                                <strong>Email :</strong> @user.Email
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success w-100" @onclick="InviteToPlay">
+                                <i class="bi bi-calendar-plus"></i> Inviter à jouer
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Disponibilités</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (availabilities != null && availabilities.Any())
+                                {
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Jour</th>
+                                                <th>Horaire</th>
+                                                <th>Récurrent</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var availability in availabilities)
+                                            {
+                                                <tr>
+                                                    <td>@GetDayName(availability.DayOfWeek)</td>
+                                                    <td>@availability.StartTime.ToString(@"hh\:mm") - @availability.EndTime.ToString(@"hh\:mm")</td>
+                                                    <td>@(availability.IsRecurring ? "Oui" : "Non")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Aucune disponibilité renseignée.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Statistiques</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (playerStats != null)
+                                {
+                                    <div class="row">
+                                        <div class="col-md-4 text-center">
+                                            <h4>@playerStats.TotalMatches</h4>
+                                            <p>Matchs joués</p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <h4>@playerStats.Wins</h4>
+                                            <p>Victoires</p>
+                                        </div>
+                                        <div class="col-md-4 text-center">
+                                            <h4>@playerStats.WinRate%</h4>
+                                            <p>Taux de victoire</p>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Aucune statistique disponible.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-secondary" @onclick="ReturnToSearch">
+                    <i class="bi bi-arrow-left"></i> Retour à la recherche
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UserResponse user;
+    private List<AvailabilityResponse> availabilities;
+    private BlazorPlayerStats playerStats;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            user = await UserService.GetUserByIdAsync(Id);
+            
+            // Ces fonctionnalités peuvent être implémentées plus tard
+            // availabilities = await AvailabilityService.GetUserAvailabilitiesAsync(Id);
+            // playerStats = await StatsService.GetPlayerStatsAsync(Id);
+            
+            // En attendant, créons des données fictives
+            GenerateSampleData();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du profil: {ex.Message}");
+            user = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GenerateSampleData()
+    {
+        // Données d'exemple pour les disponibilités
+        availabilities = new List<AvailabilityResponse>
+        {
+            new AvailabilityResponse { DayOfWeek = 1, StartTime = new TimeSpan(18, 0, 0), EndTime = new TimeSpan(20, 0, 0), IsRecurring = true },
+            new AvailabilityResponse { DayOfWeek = 3, StartTime = new TimeSpan(17, 30, 0), EndTime = new TimeSpan(19, 30, 0), IsRecurring = true },
+            new AvailabilityResponse { DayOfWeek = 6, StartTime = new TimeSpan(10, 0, 0), EndTime = new TimeSpan(12, 0, 0), IsRecurring = true }
+        };
+
+        // Données d'exemple pour les statistiques
+        playerStats = new BlazorPlayerStats
+        {
+            UserId = Id,
+            TotalMatches = 24,
+            Wins = 15,
+            Losses = 9,
+            WinRate = 62.5m
+        };
+    }
+
+    private string GetDayName(int dayOfWeek)
+    {
+        return dayOfWeek switch
+        {
+            1 => "Lundi",
+            2 => "Mardi",
+            3 => "Mercredi",
+            4 => "Jeudi",
+            5 => "Vendredi",
+            6 => "Samedi",
+            7 => "Dimanche",
+            _ => "Inconnu"
+        };
+    }
+
+    private void InviteToPlay()
+    {
+        // Cette fonctionnalité sera implémentée plus tard
+        // Pour l'instant, redirigeons vers une page fictive
+        NavigationManager.NavigateTo($"/invite/new/{Id}");
+    }
+
+    private void ReturnToSearch()
+    {
+        NavigationManager.NavigateTo("/players/search");
+    }
+}

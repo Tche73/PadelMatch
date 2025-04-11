@@ -12,5 +12,6 @@ namespace Domain.Interface.Repositories
         User GetByUsername(string username);
         User GetByEmail(string email);
         IEnumerable<User> GetBySkillLevel(int skillLevelId);
+        IEnumerable<User> FindCompatiblePlayers(int userId, int skillLevelTolerance = 1);
     }
 }

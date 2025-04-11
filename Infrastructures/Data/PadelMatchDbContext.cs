@@ -1,10 +1,6 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructures.Data
 {
@@ -23,9 +19,8 @@ namespace Infrastructures.Data
         public DbSet<Match> Matches { get; set; }
         public DbSet<MatchPlayer> MatchPlayers { get; set; }
         public DbSet<PlayerStats> PlayerStats { get; set; }
-
-      
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
+              
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
@@ -37,6 +32,12 @@ namespace Infrastructures.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            modelBuilder.Entity<User>()
+               .Property(u => u.Role)
+               .HasConversion<int>() // Convertir l'enum en int pour la base de données
+               .HasDefaultValue(UserRole.User) // Valeur par défaut
+               .IsRequired();
 
             // Configuration des comportements de suppression
             modelBuilder.Entity<Reservation>()
@@ -64,6 +65,11 @@ namespace Infrastructures.Data
 
             modelBuilder.Entity<Match>()
                 .HasIndex(m => m.Status);
+
+            modelBuilder.Entity<Availability>()
+                .HasOne(a => a.User)
+                .WithMany(a => a.Availabilities)
+                .HasForeignKey(a => a.UserId);
         }
     }    
 }

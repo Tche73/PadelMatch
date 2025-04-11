@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Domain.Enums;
 
 
 namespace Domain.Entities
@@ -44,6 +45,7 @@ namespace Domain.Entities
 
         [Required]
         public bool IsActive { get; set; }
+        public UserRole Role { get; set; } = UserRole.User;
 
         // Navigation properties
         public virtual SkillLevel SkillLevel { get; set; }

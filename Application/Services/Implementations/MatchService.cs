@@ -257,5 +257,12 @@ namespace Application.Services.Implementations
             _unitOfWork.MatchPlayers.Remove(matchPlayer);
             _unitOfWork.Complete();
         }
+
+        public void UpdatePlayerStats(int userId, bool isWin)
+        {
+            _unitOfWork.PlayerStats.UpdatePlayerStats(userId, isWin);
+        }
+
+       
     }
 }

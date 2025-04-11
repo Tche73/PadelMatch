@@ -12,11 +12,13 @@ namespace Infrastructures.Repositories
     {
         protected readonly PadelMatchDbContext _context;
         protected readonly DbSet<T> _dbSet;
+        protected readonly string _connectionString;
 
         public Repository(PadelMatchDbContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();
+            _connectionString = context.Database.GetConnectionString();
         }
 
         public void Add(T entity)
@@ -34,12 +36,12 @@ namespace Infrastructures.Repositories
             return _dbSet.Where(predicate);
         }
 
-        public IEnumerable<T> GetAll()
+        public virtual IEnumerable<T> GetAll()
         {
             return _dbSet.ToList();
         }
 
-        public T GetById(int id)
+        public virtual T GetById(int id)
         {
             return _dbSet.Find(id);
         }
@@ -59,5 +61,7 @@ namespace Infrastructures.Repositories
             _dbSet.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
         }
+
+
     }
 }

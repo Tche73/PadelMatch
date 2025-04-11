@@ -1,0 +1,168 @@
+﻿@page "/register"
+@using PadelMatchBlazor.Models
+@using PadelMatchBlazor.Services
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject SkillLevelService SkillLevelService
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Inscription</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@registerRequest" OnValidSubmit="HandleRegistration">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName">Prénom</label>
+                                <InputText id="firstName" @bind-Value="registerRequest.FirstName" class="form-control" />
+                                <ValidationMessage For="@(() => registerRequest.FirstName)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName">Nom</label>
+                                <InputText id="lastName" @bind-Value="registerRequest.LastName" class="form-control" />
+                                <ValidationMessage For="@(() => registerRequest.LastName)" />
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="username">Nom d'utilisateur</label>
+                            <InputText id="username" @bind-Value="registerRequest.Username" class="form-control" />
+                            <ValidationMessage For="@(() => registerRequest.Username)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email">Adresse e-mail</label>
+                            <InputText id="email" type="email" @bind-Value="registerRequest.Email" class="form-control" />
+                            <ValidationMessage For="@(() => registerRequest.Email)" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password">Mot de passe</label>
+                                <InputText id="password" type="password" @bind-Value="registerRequest.Password" class="form-control" />
+                                <ValidationMessage For="@(() => registerRequest.Password)" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="confirmPassword">Confirmer le mot de passe</label>
+                                <InputText id="confirmPassword" type="password" @bind-Value="registerRequest.ConfirmPassword" class="form-control" />
+                                <ValidationMessage For="@(() => registerRequest.ConfirmPassword)" />
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="skillLevel">Niveau de jeu</label>
+                            <InputSelect id="skillLevel" @bind-Value="registerRequest.SkillLevelId" class="form-control">
+                                <option value="">Sélectionnez votre niveau</option>
+                                @foreach (var level in skillLevels)
+                                {
+                                    <option value="@level.Id">@level.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => registerRequest.SkillLevelId)" />
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    <span> Inscription en cours...</span>
+                                }
+                                else
+                                {
+                                    <span>S'inscrire</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">Vous avez déjà un compte? <a href="/login">Se connecter</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequest registerRequest = new RegisterRequest();
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    private List<SkillLevel> skillLevels = new List<SkillLevel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Chargez les niveaux de compétence depuis votre API
+            // skillLevels = await SkillLevelService.GetAllAsync();
+
+            // En attendant, on peut utiliser des données d'exemple
+            skillLevels = new List<SkillLevel>
+            {
+                new SkillLevel { Id = 1, Name = "Débutant" },
+                new SkillLevel { Id = 2, Name = "Débutant Intermédiaire" },
+                new SkillLevel { Id = 3, Name = "Intermédiaire" },
+                new SkillLevel { Id = 4, Name = "Intermédiaire Confirmé" },
+                new SkillLevel { Id = 5, Name = "Avancé" },
+                new SkillLevel { Id = 6, Name = "Avancé Supérieur" },
+                new SkillLevel { Id = 7, Name = "Compétiteur" },
+                new SkillLevel { Id = 8, Name = "Compétiteur Confirmé" },
+                new SkillLevel { Id = 9, Name = "Expert" },
+                new SkillLevel { Id = 10, Name = "Professionnel" }                
+            };
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des niveaux de compétence: {ex.Message}";
+        }
+    }
+
+    private async Task HandleRegistration()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            // Vérifiez que les mots de passe correspondent
+            if (registerRequest.Password != registerRequest.ConfirmPassword)
+            {
+                errorMessage = "Les mots de passe ne correspondent pas.";
+                return;
+            }
+
+            var result = await AuthService.Register(registerRequest);
+            if (result)
+            {
+                // Redirection vers la page de connexion ou affichage d'un message de succès
+                NavigationManager.NavigateTo("/login?registered=true");
+            }
+            else
+            {
+                errorMessage = "Erreur lors de l'inscription. Veuillez réessayer.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de l'inscription: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
