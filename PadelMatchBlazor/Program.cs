@@ -1,3 +1,4 @@
+//using Application.Services.Implementations;
 using Application.Services.Implementations;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -19,6 +20,7 @@ builder.Services.AddScoped<ReservationService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthorizationMessageHandler>();
 builder.Services.AddScoped<SkillLevelService>();
+builder.Services.AddScoped<PadelMatchBlazor.Services.CourtService>();
 
 
 // Configurez le HttpClient via IHttpClientFactory

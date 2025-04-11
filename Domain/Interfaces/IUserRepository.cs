@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Interface.Repositories
+namespace Domain.Interfaces
 {
     public interface IUserRepository : IRepository<User>
     {

@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Interface.Repositories
+namespace Domain.Interfaces
 {
     public interface IRepository<T> where T : class
     {
@@ -17,5 +17,5 @@ namespace Domain.Interface.Repositories
         void Update(T entity);
         void Remove(T entity);
         void RemoveRange(IEnumerable<T> entities);
-    }    
+    }
 }

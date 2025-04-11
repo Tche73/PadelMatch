@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
 using System;
 
-namespace Domain.Interface.Repositories
+namespace Domain.Interfaces
 {
     public interface IPlayerStatsRepository : IRepository<PlayerStats>
     {

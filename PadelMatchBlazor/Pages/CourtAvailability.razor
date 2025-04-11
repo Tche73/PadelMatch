@@ -1,0 +1,204 @@
+﻿@page "/courts/availability"
+@attribute [Authorize]
+@using Application.Services.Implementations
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models
+@using PadelMatchBlazor.Services
+@inject HttpClient Http
+@inject PadelMatchBlazor.Services.CourtService CourtService
+@inject NavigationManager NavigationManager
+
+
+<div class="container mt-4">
+    <h2>Disponibilité des terrains</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Rechercher un terrain</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label>Date</label>
+                    <input type="date" @bind="searchDate" class="form-control" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-primary" @onclick="SearchAvailability">
+                    <i class="bi bi-search"></i> Rechercher
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (availabilityData != null)
+    {
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Disponibilités pour le @searchDate.ToString("dd/MM/yyyy")</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Heure</th>
+                                @foreach (var court in courts)
+                                {
+                                    <th>@court.Name</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var timeSlot in timeSlots)
+                            {
+                                <tr>
+                                    <td>@timeSlot.ToString(@"hh\:mm") - @timeSlot.Add(TimeSpan.FromHours(1)).ToString(@"hh\:mm")</td>
+                                    @foreach (var court in courts)
+                                    {
+                                        bool isAvailable = IsCourtAvailable(court.Id, timeSlot);
+                                        <td class="@(isAvailable ? "bg-success-subtle" : "bg-danger-subtle text-decoration-line-through")">
+                                            @if (isAvailable)
+                                            {
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => BookCourt(court.Id, timeSlot)">
+                                                    Réserver
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span>Occupé</span>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DateTime searchDate = DateTime.Today;
+    private List<CourtResponse> courts = new List<CourtResponse>();
+    private List<TimeSpan> timeSlots = new List<TimeSpan>();
+    private List<CourtAvailabilityResponse> availabilityData;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Générer les créneaux horaires (par exemple, de 8h à 22h par incréments d'une heure)
+        var openingTime = new TimeSpan(8, 0, 0);
+        var closingTime = new TimeSpan(22, 0, 0);
+        var slotDuration = TimeSpan.FromHours(1);
+
+        for (var time = openingTime; time < closingTime; time = time.Add(slotDuration))
+        {
+            timeSlots.Add(time);
+        }
+
+        // Charger la liste des terrains
+        try
+        {
+            courts = await CourtService.GetAllCourtsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des terrains : {ex.Message}");
+
+            // Données fictives pour le développement
+            courts = new List<CourtResponse>
+            {
+                new CourtResponse { Id = 1, Name = "Terrain 1", Description = "Terrain intérieur" },
+                new CourtResponse { Id = 2, Name = "Terrain 2", Description = "Terrain intérieur" },
+                new CourtResponse { Id = 3, Name = "Terrain 3", Description = "Terrain extérieur" },
+                new CourtResponse { Id = 4, Name = "Terrain 4", Description = "Terrain extérieur" }
+            };
+        }
+    }
+
+    private async Task SearchAvailability()
+    {
+        isLoading = true;
+
+        try
+        {
+            availabilityData = await CourtService.GetCourtsAvailabilityAsync(searchDate);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la recherche des disponibilités : {ex.Message}");
+
+            // Données fictives pour le développement
+            availabilityData = GenerateSampleAvailability();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool IsCourtAvailable(int courtId, TimeSpan timeSlot)
+    {
+        if (availabilityData == null)
+            return false;
+
+        var courtAvailability = availabilityData.FirstOrDefault(a => a.CourtId == courtId);
+        if (courtAvailability == null)
+            return false;
+
+        return courtAvailability.AvailableTimeSlots.Any(slot =>
+            slot.StartTime.TimeOfDay == timeSlot &&
+            slot.Status == ReservationStatus.Available);
+    }
+
+    private void BookCourt(int courtId, TimeSpan timeSlot)
+    {
+        var date = searchDate.Add(timeSlot);
+        NavigationManager.NavigateTo($"/reservations/create?courtId={courtId}&date={date:yyyy-MM-ddTHH:mm:ss}");
+    }
+
+    private List<CourtAvailabilityResponse> GenerateSampleAvailability()
+    {
+        var random = new Random();
+        var result = new List<CourtAvailabilityResponse>();
+
+        foreach (var court in courts)
+        {
+            var availableSlots = new List<ReservationSlotResponse>();
+
+            foreach (var timeSlot in timeSlots)
+            {
+                // Générer aléatoirement si le créneau est disponible (70% de chance)
+                bool isAvailable = random.Next(100) < 70;
+
+                availableSlots.Add(new ReservationSlotResponse
+                    {
+                        StartTime = searchDate.Add(timeSlot),
+                        EndTime = searchDate.Add(timeSlot).AddHours(1),
+                        Status = isAvailable ? ReservationStatus.Available : ReservationStatus.Booked
+                    });
+            }
+
+            result.Add(new CourtAvailabilityResponse
+                {
+                    CourtId = court.Id,
+                    CourtName = court.Name,
+                    AvailableTimeSlots = availableSlots
+                });
+        }
+
+        return result;
+    }
+}

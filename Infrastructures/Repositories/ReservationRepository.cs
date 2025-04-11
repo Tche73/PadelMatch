@@ -1,6 +1,6 @@
 ﻿using BStorm.Tools.Database;
 using Domain.Entities;
-using Domain.Interface.Repositories;
+using Domain.Interfaces;
 using Infrastructures.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -78,6 +78,25 @@ namespace Infrastructures.Repositories
                 .Include(r => r.Court)
                 .Include(r => r.Creator)
                 .FirstOrDefault(r => r.Id == id);
+        }
+
+        public IEnumerable<Reservation> GetReservationsForDate(DateTime date)
+        {
+            return _context.Reservations
+                 .Include(r => r.Court)
+                 .Include(r => r.Creator)
+                 .Where(r => r.StartDateTime.Date == date)
+                 .ToList();
+        }
+
+        public IEnumerable<Reservation> GetReservationsByUserId(int userId)
+        {
+            //return _dbSet.Where(r => r.CreatedBy == userId).ToList();
+            return _context.Reservations
+            .Include(r => r.Court)
+            .Include(r => r.Creator)
+            .Where(r => r.CreatedBy == userId)
+            .ToList();
         }
     }
 }

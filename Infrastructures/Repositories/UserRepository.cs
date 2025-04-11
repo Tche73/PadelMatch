@@ -1,9 +1,9 @@
 ﻿using Domain.Entities;
-using Domain.Interface.Repositories;
 using Infrastructures.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using BStorm.Tools.Database;
+using Domain.Interfaces;
 namespace Infrastructures.Repositories
 {
     public class UserRepository : Repository<User>, IUserRepository
@@ -31,7 +31,7 @@ namespace Infrastructures.Repositories
                 .FirstOrDefault(u => u.Username == username);
         }
 
-        // Ajoutez cette méthode à votre UserRepository existant
+       
         public IEnumerable<User> FindCompatiblePlayers(int userId, int skillLevelTolerance = 1)
         {
             // Utilisez l'extension que vous avez mentionnée de BStorm.Tools.Database

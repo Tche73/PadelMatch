@@ -1,6 +1,5 @@
 ﻿using Application.Services.Interfaces;
 using Domain.Entities;
-using Domain.Interfaces.Repositories;
 using Domain.Interfaces;
 using System;
 using System.Collections.Generic;

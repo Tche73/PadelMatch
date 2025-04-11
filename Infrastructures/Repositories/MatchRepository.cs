@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
-using Domain.Interfaces.Repositories;
+using Domain.Interfaces;
 using Infrastructures.Data;
-using DomainMatch = Domain.Entities.Match; 
+using DomainMatch = Domain.Entities.Match;
 
 
 namespace Infrastructures.Repositories

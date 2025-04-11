@@ -1,6 +1,6 @@
 ﻿using BStorm.Tools.Database;
 using Domain.Entities;
-using Domain.Interface.Repositories;
+using Domain.Interfaces;
 using Infrastructures.Data;
 using Microsoft.Data.SqlClient;
 

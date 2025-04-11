@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Domain.Interface.Repositories
+namespace Domain.Interfaces
 {
     public interface ICourtRepository : IRepository<Court>
     {
