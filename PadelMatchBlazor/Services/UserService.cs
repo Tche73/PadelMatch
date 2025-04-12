@@ -1,4 +1,5 @@
-﻿using PadelMatchBlazor.Models;
+﻿using PadelMatchBlazor.Models.Requests;
+using PadelMatchBlazor.Models.Responses;
 using System.Text;
 
 namespace PadelMatchBlazor.Services

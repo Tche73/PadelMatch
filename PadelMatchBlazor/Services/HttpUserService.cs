@@ -1,4 +1,6 @@
 ﻿using PadelMatchBlazor.Models;
+using PadelMatchBlazor.Models.Requests;
+using PadelMatchBlazor.Models.Responses;
 using System.Net.Http.Json;
 using System.Text;
 

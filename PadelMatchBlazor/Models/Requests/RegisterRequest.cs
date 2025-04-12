@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace PadelMatchBlazor.Models
+namespace PadelMatchBlazor.Models.Requests
 {
     public class RegisterRequest
     {

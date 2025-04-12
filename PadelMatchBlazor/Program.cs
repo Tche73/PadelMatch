@@ -16,7 +16,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Ajouter les services
 builder.Services.AddScoped<HttpService>();
 builder.Services.AddScoped<PadelMatchBlazor.Services.UserService>();
-builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<PadelMatchBlazor.Services.ReservationService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthorizationMessageHandler>();
 builder.Services.AddScoped<SkillLevelService>();

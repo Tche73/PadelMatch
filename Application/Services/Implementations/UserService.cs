@@ -4,7 +4,6 @@ using Application.Queries.Interfaces;
 using Application.Services.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using Domain.Interface.Repositories;
 using Domain.Interfaces;
 
 namespace Application.Services.Implementations

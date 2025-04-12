@@ -12,6 +12,7 @@ using System.Text;
 using Application.DTO_s;
 using Application.Queries.Interfaces;
 using Application.Queries;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 
 
@@ -107,6 +108,9 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<IMatchRepository, MatchRepository>();
 builder.Services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+
+builder.Services.AddScoped<ICourtService,CourtService>();
+builder.Services.AddScoped<ICourtRepository, CourtRepository>();
 
 
 

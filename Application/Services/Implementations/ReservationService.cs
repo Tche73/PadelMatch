@@ -1,13 +1,7 @@
-﻿  using Application.Services.Interfaces;
+﻿using Application.Services.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using Domain.Interface.Repositories;
 using Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services.Implementations
 {
@@ -168,7 +162,7 @@ namespace Application.Services.Implementations
 
         public IEnumerable<Reservation> GetByUserId(int userId)
         {
-            return _unitOfWork.Reservations.GetByUser(userId);
+            return _unitOfWork.Reservations.GetReservationsByUserId(userId);
         }
 
         public void Update(Reservation reservation)

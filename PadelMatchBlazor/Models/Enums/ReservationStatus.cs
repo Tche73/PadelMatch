@@ -1,4 +1,4 @@
-﻿namespace PadelMatchBlazor.Models
+﻿namespace PadelMatchBlazor.Models.Enums
 {
     public enum ReservationStatus
     {

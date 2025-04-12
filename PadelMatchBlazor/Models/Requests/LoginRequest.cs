@@ -1,4 +1,4 @@
-﻿namespace PadelMatchBlazor.Models
+﻿namespace PadelMatchBlazor.Models.Requests
 {
     public class LoginRequest
     {

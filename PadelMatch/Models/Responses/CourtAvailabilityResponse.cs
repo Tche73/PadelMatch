@@ -1,4 +1,4 @@
-﻿namespace PadelMatchBlazor.Models
+﻿namespace PadelMatch.Models.Responses
 {
     public class CourtAvailabilityResponse
     {

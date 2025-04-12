@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using PadelMatchBlazor.Auth;
-using PadelMatchBlazor.Models;
+using PadelMatchBlazor.Models.Requests;
+using PadelMatchBlazor.Models.Responses;
 using System.Net.Http.Json;
 
 namespace PadelMatchBlazor.Services
