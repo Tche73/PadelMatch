@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Interface.Repositories
+namespace Domain.Interfaces
 {
     public interface IUserRepository : IRepository<User>
     {
         User GetByUsername(string username);
         User GetByEmail(string email);
         IEnumerable<User> GetBySkillLevel(int skillLevelId);
+        IEnumerable<User> FindCompatiblePlayers(int userId, int skillLevelTolerance = 1);
     }
 }

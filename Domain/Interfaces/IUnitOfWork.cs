@@ -1,6 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Interface.Repositories;
-using Domain.Interfaces.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +11,12 @@ namespace Domain.Interfaces
     {
         IUserRepository Users { get; }
         IRepository<SkillLevel> SkillLevels { get; }
-        IRepository<Availability> Availabilities { get; }
-        IRepository<Court> Courts { get; }
+        IAvailabilityRepository Availabilities { get; }
+        ICourtRepository Courts { get; }
         IReservationRepository Reservations { get; }
         IMatchRepository Matches { get; }
         IRepository<MatchPlayer> MatchPlayers { get; }
-        IRepository<PlayerStats> PlayerStats { get; }
-
+        IPlayerStatsRepository PlayerStats { get; }
         int Complete();
     }
 }

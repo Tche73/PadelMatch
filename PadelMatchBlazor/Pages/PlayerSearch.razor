@@ -1,0 +1,235 @@
+﻿@page "/players/search"
+@attribute [Authorize]
+@using Application.Services.Implementations
+@using Domain.Entities
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models
+@using PadelMatchBlazor.Models.Requests
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Services
+@inject HttpUserService UserService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h3 class="mb-3">Recherche de partenaires</h3>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Filtres de recherche</h5>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@searchRequest" OnValidSubmit="HandleSearch">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="form-group mb-3">
+                            <label>Niveau de jeu</label>
+                            <InputSelect @bind-Value="searchRequest.SkillLevelId" class="form-select">
+                                <option value="">Tous les niveaux</option>
+                                @foreach (var level in skillLevels)
+                                {
+                                    <option value="@level.Id">@level.Name</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Tolérance de niveau (±)</label>
+                            <InputNumber @bind-Value="searchRequest.SkillLevelTolerance" class="form-control" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Jour de disponibilité</label>
+                            <InputSelect @bind-Value="searchRequest.DayOfWeek" class="form-select">
+                                <option value="">Tous les jours</option>
+                                <option value="1">Lundi</option>
+                                <option value="2">Mardi</option>
+                                <option value="3">Mercredi</option>
+                                <option value="4">Jeudi</option>
+                                <option value="5">Vendredi</option>
+                                <option value="6">Samedi</option>
+                                <option value="7">Dimanche</option>
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Heure de début</label>
+                            <InputTime @bind-Value="searchRequest.StartTime" CssClass="form-control" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label>Heure de fin</label>
+                            <InputTime @bind-Value="searchRequest.EndTime" CssClass="form-control" />
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-secondary me-2" @onclick="ResetFilters">
+                                <i class="bi bi-x-circle"></i> Réinitialiser
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Rechercher
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            @if (isLoading)
+            {
+                <div class="text-center my-5">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            }
+            else if (players == null)
+            {
+                <div class="alert alert-info">
+                    Utilisez les filtres pour rechercher des partenaires.
+                </div>
+            }
+            else if (!players.Any())
+            {
+                <div class="alert alert-warning">
+                    Aucun joueur trouvé correspondant à vos critères.
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Résultats de recherche</h5>
+                        <span class="badge bg-light text-dark">@players.Count() joueur(s) trouvé(s)</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var player in players)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">@player.FirstName @player.LastName</h5>
+                                            <h6 class="card-subtitle mb-2 text-muted">@player.SkillLevelName</h6>
+                                            
+                                            @if (player.Availabilities != null && player.Availabilities.Any())
+                                            {
+                                                <p class="card-text">
+                                                    <small>
+                                                        <i class="bi bi-calendar-check"></i> Disponibilités:
+                                                        <ul class="list-unstyled ms-3">
+                                                            @foreach (var availability in player.Availabilities.Take(3))
+                                                            {
+                                                                <li>@GetDayName(availability.DayOfWeek): @availability.StartTime.ToString("hh\\:mm") - @availability.EndTime.ToString("hh\\:mm")</li>
+                                                            }
+                                                            @if (player.Availabilities.Count() > 3)
+                                                            {
+                                                                <li>...</li>
+                                                            }
+                                                        </ul>
+                                                    </small>
+                                                </p>
+                                            }
+                                        </div>
+                                        <div class="card-footer d-flex justify-content-between">
+                                            <button class="btn btn-sm btn-info" @onclick="() => ViewProfile(player.Id)">
+                                                <i class="bi bi-person-badge"></i> Profil
+                                            </button>
+                                            <button class="btn btn-sm btn-success" @onclick="() => InviteToPlay(player.Id)">
+                                                <i class="bi bi-calendar-plus"></i> Inviter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private PlayerSearchRequest searchRequest = new PlayerSearchRequest();
+    private IEnumerable<UserResponse> players;
+    private IEnumerable<Models.SkillLevel> skillLevels = new List<Models.SkillLevel>();
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            skillLevels = await UserService.GetSkillLevelsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des niveaux : {ex.Message}");
+
+            skillLevels = new List<PadelMatchBlazor.Models.SkillLevel>
+            {
+                new PadelMatchBlazor.Models.SkillLevel { Id = 1, Name = "Débutant" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 2, Name = "Débutant Intermédiaire" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 3, Name = "Intermédiaire" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 4, Name = "Intermédiaire Confirmé" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 5, Name = "Avancé" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 6, Name = "Avancé Supérieur" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 7, Name = "Compétiteur" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 8, Name = "Compétiteur Confirmé" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 9, Name = "Expert" },
+                new PadelMatchBlazor.Models.SkillLevel { Id = 10, Name = "Professionnel" }
+            };
+        }
+    }
+
+    private async Task HandleSearch()
+    {
+        isLoading = true;
+        try
+        {
+            players = await UserService.SearchPlayersAsync(searchRequest);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la recherche : {ex.Message}");
+            players = Enumerable.Empty<UserResponse>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ResetFilters()
+    {
+        searchRequest = new PlayerSearchRequest();
+        StateHasChanged();
+    }
+
+    private void ViewProfile(int userId)
+    {
+        NavigationManager.NavigateTo($"/players/{userId}");
+    }
+
+    private void InviteToPlay(int userId)
+    {
+        NavigationManager.NavigateTo($"/invite/new/{userId}");
+    }
+    
+    private string GetDayName(int dayOfWeek)
+    {
+        return dayOfWeek switch
+        {
+            1 => "Lundi",
+            2 => "Mardi",
+            3 => "Mercredi",
+            4 => "Jeudi",
+            5 => "Vendredi",
+            6 => "Samedi",
+            7 => "Dimanche",
+            _ => "Inconnu"
+        };
+    }
+}

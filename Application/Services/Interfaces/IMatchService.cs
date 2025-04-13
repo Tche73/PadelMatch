@@ -17,6 +17,7 @@ namespace Application.Services.Interfaces
         void RemovePlayer(int matchId, int userId);
         void ChangeStatus(int id, MatchStatus status);
         void CompleteMatch(int id, List<int> winningTeamUserIds);
+        void UpdatePlayerStats(int userId, bool isWin);
         User GetPartner(int matchId, int userId);
         IEnumerable<User> GetOpponents(int matchId, int userId);
     }

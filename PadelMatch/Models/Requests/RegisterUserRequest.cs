@@ -1,4 +1,6 @@
-﻿namespace PadelMatch.Models.Requests
+﻿using Domain.Enums;
+
+namespace PadelMatch.Models.Requests
 {
     public class RegisterUserRequest
     {
@@ -7,6 +9,6 @@
         public string Password { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public int SkillLevelId { get; set; }
+        public int SkillLevelId { get; set; }               
     }
 }

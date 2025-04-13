@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructures", "Infrastructures\Infrastructures.csproj", "{732231E6-CC4E-4766-A684-BE57D9E23D87}"
 EndProject
-Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "PadelMatchDB", "PadelMatchDB\PadelMatchDB.sqlproj", "{9136B02E-1B24-483A-947A-72327B4C680D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PadelMatchBlazor", "PadelMatchBlazor\PadelMatchBlazor.csproj", "{08430A4B-B753-4C51-8FDF-4E5253B0D56C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,12 +35,10 @@ Global
 		{732231E6-CC4E-4766-A684-BE57D9E23D87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{732231E6-CC4E-4766-A684-BE57D9E23D87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{732231E6-CC4E-4766-A684-BE57D9E23D87}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9136B02E-1B24-483A-947A-72327B4C680D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9136B02E-1B24-483A-947A-72327B4C680D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9136B02E-1B24-483A-947A-72327B4C680D}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{9136B02E-1B24-483A-947A-72327B4C680D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9136B02E-1B24-483A-947A-72327B4C680D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9136B02E-1B24-483A-947A-72327B4C680D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{08430A4B-B753-4C51-8FDF-4E5253B0D56C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08430A4B-B753-4C51-8FDF-4E5253B0D56C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08430A4B-B753-4C51-8FDF-4E5253B0D56C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08430A4B-B753-4C51-8FDF-4E5253B0D56C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

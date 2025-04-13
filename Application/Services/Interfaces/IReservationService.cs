@@ -11,6 +11,7 @@ namespace Application.Services.Interfaces
     public interface IReservationService
     {
         Reservation GetById(int id);
+        IEnumerable<Reservation> GetAll();
         IEnumerable<Reservation> GetByCourtId(int courtId);
         IEnumerable<Reservation> GetByUserId(int userId);
         IEnumerable<Reservation> GetByDateRange(DateTime start, DateTime end);

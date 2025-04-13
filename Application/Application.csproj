@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>c1dec564-5355-4644-bb1f-86b25f10846f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,20 +12,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Commands\Interfaces\" />
-    <Folder Include="Commands\Reservations\" />
-    <Folder Include="Commands\Users\" />
-    <Folder Include="DTO%27s\" />
-    <Folder Include="Factories\" />
-    <Folder Include="Builders\" />
-    <Folder Include="Validators\" />
-    <Folder Include="Queries\Interfaces\" />
-    <Folder Include="Queries\Reservations\" />
-    <Folder Include="Queries\Users\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="BStorm.Tools.Database" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
   </ItemGroup>
 
 </Project>

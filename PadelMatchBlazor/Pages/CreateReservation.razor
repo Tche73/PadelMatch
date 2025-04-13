@@ -1,0 +1,214 @@
+﻿@page "/reservations/create"
+@using PadelMatchBlazor.Models.Requests
+@using PadelMatchBlazor.Models.Responses
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+@inject PadelMatchBlazor.Services.CourtService CourtService
+@inject PadelMatchBlazor.Services.ReservationService ReservationService
+@inject IJSRuntime JSRuntime
+
+<div class="container mt-4">
+    <h2 class="mb-3">Nouvelle réservation</h2>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <form @onsubmit="HandleSubmit">
+                <div class="mb-3">
+                    <label for="court" class="form-label">Terrain</label>
+                    <select id="court" class="form-select" @bind="selectedCourtId">
+                        <option value="0">Sélectionnez un terrain</option>
+                        @foreach (var court in courts)
+                        {
+                            <option value="@court.Id">@court.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input id="date" type="date" class="form-control" @bind="selectedDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="startTime" class="form-label">Heure de début</label>
+                    <select id="startTime" class="form-select" @bind="selectedStartTime">
+                        <option value="">Sélectionnez l'heure</option>
+                        @foreach (var time in availableTimes)
+                        {
+                            <option value="@time">@time:hh\:mm</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="duration" class="form-label">Durée</label>
+                    <select id="duration" class="form-select" @bind="duration">
+                        <option value="1">1 heure</option>
+                        <option value="2">2 heures</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea id="notes" class="form-control" @bind="notes" rows="3"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" @onclick="GoBack">Annuler</button>
+                    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Traitement...</span>
+                        }
+                        else
+                        {
+                            <span>Réserver</span>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<CourtResponse> courts = new List<CourtResponse>();
+    private List<TimeSpan> availableTimes = new List<TimeSpan>();
+
+    private int selectedCourtId;
+    private DateTime selectedDate = DateTime.Today;
+    private TimeSpan selectedStartTime;
+    private int duration = 1;
+    private string notes = "";
+
+    private string errorMessage;
+    private bool isSubmitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Charger les terrains
+            courts = await CourtService.GetAllCourtsAsync();
+
+            // Si aucun terrain n'est retourné, créer des exemples
+            if (courts == null || !courts.Any())
+            {
+                courts = new List<CourtResponse>
+                {
+                    new CourtResponse { Id = 1, Name = "Terrain 1" },
+                    new CourtResponse { Id = 2, Name = "Terrain 2" },
+                    new CourtResponse { Id = 3, Name = "Terrain 3" },
+                    new CourtResponse { Id = 4, Name = "Terrain 4" }
+                };
+            }
+
+            // Générer les heures disponibles par défaut
+            GenerateAvailableTimes();
+
+            // Vérifier les paramètres d'URL
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+            if (int.TryParse(query["courtId"], out int courtId))
+            {
+                selectedCourtId = courtId;
+            }
+
+            if (DateTime.TryParse(query["date"], out DateTime date))
+            {
+                selectedDate = date.Date;
+                if (date.TimeOfDay.TotalMinutes > 0)
+                {
+                    selectedStartTime = date.TimeOfDay;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement initial: {ex.Message}";
+        }
+    }
+
+    private void GenerateAvailableTimes()
+    {
+        availableTimes.Clear();
+
+        // Créneaux de 8h à 21h
+        for (int hour = 8; hour <= 21; hour++)
+        {
+            availableTimes.Add(new TimeSpan(hour, 0, 0));
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = null;
+
+        // Validation
+        if (selectedCourtId <= 0)
+        {
+            errorMessage = "Veuillez sélectionner un terrain";
+            return;
+        }
+
+        if (selectedStartTime == default)
+        {
+            errorMessage = "Veuillez sélectionner une heure de début";
+            return;
+        }
+
+        // Vérification si l'heure est déjà passée
+        DateTime reservationDateTime = selectedDate.Add(selectedStartTime);
+        if (reservationDateTime < DateTime.Now)
+        {
+            errorMessage = "L'heure que vous sélectionnez est déjà passée. Veuillez choisir une heure future.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var request = new ReservationRequest
+                {
+                    CourtId = selectedCourtId,
+                    StartTime = selectedDate.Add(selectedStartTime),
+                    EndTime = selectedDate.Add(selectedStartTime).AddHours(duration),
+                    Notes = notes
+                };
+
+            bool success = await ReservationService.CreateReservationAsync(request);
+
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Réservation créée avec succès");
+                NavigationManager.NavigateTo("/reservations");
+            }
+            else
+            {
+                errorMessage = "La création de la réservation a échoué";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/courts/availability");
+    }
+}

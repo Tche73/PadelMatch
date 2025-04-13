@@ -1,13 +1,7 @@
 ﻿using Application.Services.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
-using Domain.Interface.Repositories;
 using Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services.Implementations
 {
@@ -77,6 +71,12 @@ namespace Application.Services.Implementations
             if (reservation.StartDateTime >= reservation.EndDateTime)
                 throw new InvalidOperationException("La date de fin doit être postérieure à la date de début.");
 
+            // Vérifier que la date de début n'est pas dans le passé
+            if (reservation.StartDateTime < DateTime.Now)
+            {
+                throw new InvalidOperationException("Impossible de créer une réservation pour une date passée.");
+            }
+
             // Vérifier qu'il n'y a pas de chevauchement avec d'autres réservations
             var existingReservations = _unitOfWork.Reservations
                 .GetByDateRange(reservation.StartDateTime, reservation.EndDateTime)
@@ -97,8 +97,11 @@ namespace Application.Services.Implementations
             _unitOfWork.Reservations.Add(reservation);
             _unitOfWork.Complete();
         }
-        
 
+        public IEnumerable<Reservation> GetAll()
+        {
+            return _unitOfWork.Reservations.GetAll().Where(r => r.Status != ReservationStatus.Cancelled);
+        }
         public IEnumerable<Reservation> GetAvailableTimeSlots(int courtId, DateTime date)
         {
             var openingTime = new TimeSpan(8, 0, 0);
@@ -159,7 +162,7 @@ namespace Application.Services.Implementations
 
         public IEnumerable<Reservation> GetByUserId(int userId)
         {
-            return _unitOfWork.Reservations.GetByUser(userId);
+            return _unitOfWork.Reservations.GetReservationsByUserId(userId);
         }
 
         public void Update(Reservation reservation)
@@ -177,6 +180,12 @@ namespace Application.Services.Implementations
             // Vérifier la validité de la période
             if (reservation.StartDateTime >= reservation.EndDateTime)
                 throw new InvalidOperationException("La date de fin doit être postérieure à la date de début.");
+
+            // Vérifier que la date de début n'est pas dans le passé
+            if (reservation.StartDateTime < DateTime.Now)
+            {
+                throw new InvalidOperationException("Impossible de créer une réservation pour une date passée.");
+            }
 
             // Vérifier qu'il n'y a pas de chevauchement avec d'autres réservations
             var existingReservations = _unitOfWork.Reservations
