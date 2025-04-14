@@ -21,11 +21,11 @@ namespace Domain.Entities
         [Range(1, 7)]
         public int DayOfWeek { get; set; }
 
-        [Required]
-        public TimeSpan StartTime { get; set; }
+        
+        public TimeSpan? StartTime { get; set; }
 
-        [Required]
-        public TimeSpan EndTime { get; set; }
+        
+        public TimeSpan? EndTime { get; set; }
 
         [Required]
         public bool IsRecurring { get; set; }

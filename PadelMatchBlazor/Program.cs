@@ -1,6 +1,5 @@
-//using Application.Services.Implementations;
-using Application.Services.Implementations;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -15,12 +14,19 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Ajouter les services
 builder.Services.AddScoped<HttpService>();
-builder.Services.AddScoped<PadelMatchBlazor.Services.UserService>();
-builder.Services.AddScoped<PadelMatchBlazor.Services.ReservationService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ReservationService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<AuthorizationMessageHandler>();
 builder.Services.AddScoped<SkillLevelService>();
-builder.Services.AddScoped<PadelMatchBlazor.Services.CourtService>();
+builder.Services.AddScoped<CourtService>();
+builder.Services.AddScoped<UserAvailabilityService>();
+//builder.Services.AddScoped<AuthorizationMessageHandler>();
+builder.Services.AddScoped(sp =>
+{
+    var localStorage = sp.GetRequiredService<ILocalStorageService>();
+    var navigationManager = sp.GetRequiredService<NavigationManager>();
+    return new AuthorizationMessageHandler(localStorage, navigationManager);
+});
 
 
 // Configurez le HttpClient via IHttpClientFactory

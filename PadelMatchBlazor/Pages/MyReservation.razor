@@ -1,0 +1,233 @@
+﻿@page "/my-reservations"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Models.Enums
+@using PadelMatchBlazor.Services
+@inject ReservationService ReservationService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2 class="mb-4">Mes Réservations</h2>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            @errorMessage
+        </div>
+    }
+    else if (reservations.Count == 0)
+    {
+        <div class="alert alert-info">
+            <p>Vous n'avez pas encore de réservations.</p>
+            <a href="/courts/availability" class="btn btn-primary mt-2">Réserver un terrain</a>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <a href="/courts/availability" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nouvelle réservation
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Terrain</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var reservation in reservations)
+                    {
+                        <tr>
+                            <td>@reservation.StartDateTime.ToString("dd/MM/yyyy")</td>
+                            <td>@reservation.StartDateTime.ToString("HH:mm") - @reservation.EndDateTime.ToString("HH:mm")</td>
+                            <td>@reservation.CourtName</td>
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(reservation.Status)">
+                                    @GetStatusDisplayName(reservation.Status)
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    @if (CanModify(reservation))
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditReservation(reservation.Id)">
+                                            <i class="bi bi-pencil"></i> Modifier
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => OpenCancelModal(reservation)">
+                                            Annuler
+                                        </button>
+                                    }
+                                    <button class="btn btn-sm btn-outline-info" @onclick="() => ViewDetails(reservation.Id)">
+                                        Détails
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (showCancelModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer l'annulation</h5>
+                    <button type="button" class="btn-close" @onclick="CloseCancelModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir annuler cette réservation ?</p>
+                    @if (selectedReservation != null)
+                    {
+                        <p>
+                            <strong>Date :</strong> @selectedReservation.StartDateTime.ToString("dd/MM/yyyy")<br />
+                            <strong>Heure :</strong> @selectedReservation.StartDateTime.ToString("HH:mm") - @selectedReservation.EndDateTime.ToString("HH:mm")<br />
+                            <strong>Terrain :</strong> @selectedReservation.CourtName
+                        </p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseCancelModal">Annuler</button>
+                    <button type="button" class="btn btn-danger" @onclick="CancelReservation">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ReservationResponse> reservations = new List<ReservationResponse>();
+    private bool isLoading = true;
+    private string errorMessage;
+    private bool showCancelModal = false;
+    private ReservationResponse selectedReservation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReservations();
+    }
+
+    private async Task LoadReservations()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            reservations = await ReservationService.GetMyReservationsAsync();
+            // Tri par date décroissante
+            reservations = reservations.OrderByDescending(r => r.StartDateTime).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des réservations: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadgeClass(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "bg-warning",
+            ReservationStatus.Booked => "bg-success",
+            ReservationStatus.Completed => "bg-info",
+            ReservationStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusDisplayName(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "En attente",
+            ReservationStatus.Booked => "Confirmée",
+            ReservationStatus.Completed => "Terminée",
+            ReservationStatus.Cancelled => "Annulée",
+            _ => "Inconnu"
+        };
+    }
+
+    private bool CanModify(ReservationResponse reservation)
+    {
+        // Seules les réservations futures qui ne sont pas annulées peuvent être modifiées
+        return reservation.StartDateTime > DateTime.Now &&
+               reservation.Status != ReservationStatus.Cancelled &&
+               reservation.Status != ReservationStatus.Completed;
+    }
+
+    private void EditReservation(int id)
+    {
+        NavigationManager.NavigateTo($"/edit-reservation/{id}");
+    }
+
+    private void ViewDetails(int id)
+    {
+        NavigationManager.NavigateTo($"/reservation/{id}");
+    }
+
+    private void OpenCancelModal(ReservationResponse reservation)
+    {
+        selectedReservation = reservation;
+        showCancelModal = true;
+    }
+
+    private void CloseCancelModal()
+    {
+        showCancelModal = false;
+        selectedReservation = null;
+    }
+
+    private async Task CancelReservation()
+    {
+        if (selectedReservation != null)
+        {
+            isLoading = true;
+            try
+            {
+                var success = await ReservationService.CancelReservationAsync(selectedReservation.Id);
+                if (success)
+                {
+                    await LoadReservations();
+                }
+                else
+                {
+                    errorMessage = "Erreur lors de l'annulation de la réservation.";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Erreur: {ex.Message}";
+            }
+            finally
+            {
+                isLoading = false;
+                CloseCancelModal();
+            }
+        }
+    }
+}

@@ -15,28 +15,26 @@ namespace Infrastructures.Repositories
 
         public IEnumerable<Reservation> GetByCourtId(int courtId)
         {
-            //return _dbSet.Where(r => r.CourtId == courtId).ToList();
             return _context.Reservations
                 .Include(r => r.Court)
                 .Include(r => r.Creator)
                 .Where(r => r.CourtId == courtId)
                 .ToList();
-
         }
 
         public IEnumerable<Reservation> GetByDateRange(DateTime start, DateTime end)
         {
-           return _dbSet.Where(r => r.StartDateTime >= start && r.EndDateTime <= end).ToList();
+            return _dbSet.Where(r => r.StartDateTime >= start && r.EndDateTime <= end).ToList();
         }
 
-        public IEnumerable<Reservation> GetByUser(int userId)
+        // Méthode unifiée, suppression du doublon
+        public IEnumerable<Reservation> GetByUserId(int userId)
         {
-            //return _dbSet.Where(r => r.CreatedBy == userId).ToList();
             return _context.Reservations
-            .Include(r => r.Court)
-            .Include(r => r.Creator)
-            .Where(r => r.CreatedBy == userId)
-            .ToList();
+                .Include(r => r.Court)
+                .Include(r => r.Creator)
+                .Where(r => r.CreatedBy == userId)
+                .ToList();
         }
 
         public IEnumerable<Court> GetAvailableCourts(DateTime date, TimeSpan startTime, TimeSpan endTime)
@@ -63,8 +61,8 @@ namespace Infrastructures.Repositories
                     }
                 );
             }
-
         }
+
         public override IEnumerable<Reservation> GetAll()
         {
             return _context.Reservations
@@ -72,6 +70,7 @@ namespace Infrastructures.Repositories
                 .Include(r => r.Creator)
                 .ToList();
         }
+
         public override Reservation GetById(int id)
         {
             return _context.Reservations
@@ -89,14 +88,6 @@ namespace Infrastructures.Repositories
                  .ToList();
         }
 
-        public IEnumerable<Reservation> GetReservationsByUserId(int userId)
-        {
-            //return _dbSet.Where(r => r.CreatedBy == userId).ToList();
-            return _context.Reservations
-            .Include(r => r.Court)
-            .Include(r => r.Creator)
-            .Where(r => r.CreatedBy == userId)
-            .ToList();
-        }
+        
     }
 }

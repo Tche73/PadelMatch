@@ -84,7 +84,7 @@ namespace Infrastructures.Repositories
             _context.Availabilities.RemoveRange(entities);
         }
 
-        public bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan startTime, TimeSpan endTime, int? excludeId = null)
+        public bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan? startTime, TimeSpan? endTime, int? excludeId = null)
         {
             var query = _context.Availabilities
                 .Where(a => a.UserId == userId && a.DayOfWeek == dayOfWeek);
@@ -102,7 +102,7 @@ namespace Infrastructures.Repositories
 
         }
 
-        public IEnumerable<Availability> GetByDayAndTimeRange(int dayOfWeek, TimeSpan startTime, TimeSpan endTime)
+        public IEnumerable<Availability> GetByDayAndTimeRange(int dayOfWeek, TimeSpan ?startTime, TimeSpan? endTime)
         {
             return _context.Availabilities
                 .Where(a => a.DayOfWeek == dayOfWeek)
@@ -111,5 +111,7 @@ namespace Infrastructures.Repositories
                 .Include(a => a.User)
                 .ToList();
         }
+
+        
     }
 }

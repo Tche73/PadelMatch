@@ -1,15 +1,10 @@
-﻿using Application.Services.Implementations;
-using Application.Services.Interfaces;
+﻿using Application.Services.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using PadelMatch.Models.Requests;
 using PadelMatch.Models.Responses;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace PadelMatch.Controllers
 {
@@ -83,6 +78,6 @@ namespace PadelMatch.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }   
+        }         
     }
 }

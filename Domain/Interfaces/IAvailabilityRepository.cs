@@ -14,7 +14,7 @@ namespace Domain.Interfaces
         void Add(Availability availability);
         void Update(Availability availability);
         void Delete(int id);
-        bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan startTime, TimeSpan endTime, int? excludeId = null);
-        IEnumerable<Availability> GetByDayAndTimeRange(int dayOfWeek, TimeSpan startTime, TimeSpan endTime);
+        bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan? startTime, TimeSpan? endTime, int? excludeId = null);
+        IEnumerable<Availability> GetByDayAndTimeRange(int dayOfWeek, TimeSpan? startTime, TimeSpan? endTime);
     }
 }

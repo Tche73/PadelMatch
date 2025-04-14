@@ -1,0 +1,247 @@
+﻿@page "/reservation/{Id:int}"
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Models.Enums
+@using PadelMatchBlazor.Services
+@inject ReservationService ReservationService
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my-reservations">Mes réservations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Détails de la réservation</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            @errorMessage
+        </div>
+    }
+    else if (reservation == null)
+    {
+        <div class="alert alert-warning">
+            Réservation non trouvée.
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Détails de la réservation</h4>
+                <span class="badge @GetStatusBadgeClass(reservation.Status)">
+                    @GetStatusDisplayName(reservation.Status)
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Informations générales</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Numéro :</dt>
+                            <dd class="col-sm-8">#@reservation.Id</dd>
+
+                            <dt class="col-sm-4">Date :</dt>
+                            <dd class="col-sm-8">@reservation.StartDateTime.ToString("dddd, dd MMMM yyyy")</dd>
+
+                            <dt class="col-sm-4">Heure :</dt>
+                            <dd class="col-sm-8">@reservation.StartDateTime.ToString("HH:mm") - @reservation.EndDateTime.ToString("HH:mm")</dd>
+
+                            <dt class="col-sm-4">Durée :</dt>
+                            <dd class="col-sm-8">@(reservation.EndDateTime - reservation.StartDateTime)</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Détails du terrain</h5>
+                        <dl class="row">
+                            <dt class="col-sm-4">Terrain :</dt>
+                            <dd class="col-sm-8">@reservation.CourtName</dd>
+
+                            <dt class="col-sm-4">Réservé par :</dt>
+                            <dd class="col-sm-8">@reservation.CreatorName</dd>
+
+                            <dt class="col-sm-4">Créé le :</dt>
+                            <dd class="col-sm-8">@reservation.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-secondary" @onclick="GoBack">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </button>
+                    <div>
+                        @if (CanModify(reservation))
+                        {
+                            <button class="btn btn-primary me-2" @onclick="() => EditReservation(reservation.Id)">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </button>
+                            <button class="btn btn-danger" @onclick="OpenCancelModal">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (showCancelModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer l'annulation</h5>
+                    <button type="button" class="btn-close" @onclick="CloseCancelModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir annuler cette réservation ?</p>
+                    <p>
+                        <strong>Date :</strong> @(reservation?.StartDateTime.ToString("dd/MM/yyyy"))<br />
+                        <strong>Heure :</strong> @(reservation?.StartDateTime.ToString("HH:mm")) - @(reservation?.EndDateTime.ToString("HH:mm"))<br />
+                        <strong>Terrain :</strong> @(reservation?.CourtName)
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseCancelModal">Annuler</button>
+                    <button type="button" class="btn btn-danger" @onclick="CancelReservation">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ReservationResponse reservation;
+    private bool isLoading = true;
+    private string errorMessage;
+    private bool showCancelModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReservation();
+    }
+
+    private async Task LoadReservation()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            reservation = await ReservationService.GetReservationByIdAsync(Id);
+            if (reservation == null || reservation.Id == 0)
+            {
+                errorMessage = "Réservation introuvable.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement de la réservation: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadgeClass(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "bg-warning",
+            ReservationStatus.Booked => "bg-success",
+            ReservationStatus.Completed => "bg-info",
+            ReservationStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusDisplayName(ReservationStatus status)
+    {
+        return status switch
+        {
+            ReservationStatus.Pending => "En attente",
+            ReservationStatus.Booked => "Confirmée",
+            ReservationStatus.Completed => "Terminée",
+            ReservationStatus.Cancelled => "Annulée",
+            _ => "Inconnu"
+        };
+    }
+
+    private bool CanModify(ReservationResponse reservation)
+    {
+        // Seules les réservations futures qui ne sont pas annulées peuvent être modifiées
+        return reservation.StartDateTime > DateTime.Now &&
+               reservation.Status != ReservationStatus.Cancelled &&
+               reservation.Status != ReservationStatus.Completed;
+    }
+
+    private void EditReservation(int id)
+    {
+        NavigationManager.NavigateTo($"/edit-reservation/{id}");
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/my-reservations");
+    }
+
+    private void OpenCancelModal()
+    {
+        showCancelModal = true;
+    }
+
+    private void CloseCancelModal()
+    {
+        showCancelModal = false;
+    }
+
+    private async Task CancelReservation()
+    {
+        isLoading = true;
+        try
+        {
+            var success = await ReservationService.CancelReservationAsync(Id);
+            if (success)
+            {
+                NavigationManager.NavigateTo("/my-reservations?cancelled=true");
+            }
+            else
+            {
+                errorMessage = "Erreur lors de l'annulation de la réservation.";
+                CloseCancelModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+            CloseCancelModal();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

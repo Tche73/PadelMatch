@@ -14,6 +14,6 @@ namespace Application.Services.Interfaces
         void Create(Availability availability);
         void Update(Availability availability);
         void Delete(int id);
-        bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan startTime, TimeSpan endTime, int? excludeId = null);
+        bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan? startTime, TimeSpan? endTime, int? excludeId = null);
     }
 }

@@ -5,6 +5,6 @@
         public int CourtId { get; set; }
         public DateTime StartDateTime { get; set; }
         public DateTime EndDateTime { get; set; }
-        public string Notes { get; set; } = string.Empty;
+        //public string Notes { get; set; } = string.Empty;
     }
 }

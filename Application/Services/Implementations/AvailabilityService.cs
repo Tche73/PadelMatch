@@ -30,6 +30,11 @@ namespace Application.Services.Implementations
 
         public void Create(Availability availability)
         {
+            if (!availability.StartTime.HasValue || !availability.EndTime.HasValue)
+            {
+                throw new InvalidOperationException("Les heures de début et de fin sont obligatoires");
+            }
+
             // Vérifier s'il y a des chevauchements
             if (HasOverlappingAvailability(availability.UserId, availability.DayOfWeek, availability.StartTime, availability.EndTime))
             {
@@ -58,9 +63,12 @@ namespace Application.Services.Implementations
             _unitOfWork.Complete();
         }
 
-        public bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan startTime, TimeSpan endTime, int? excludeId = null)
+        public bool HasOverlappingAvailability(int userId, int dayOfWeek, TimeSpan? startTime, TimeSpan? endTime, int? excludeId = null)
         {
-            return _unitOfWork.Availabilities.HasOverlappingAvailability(userId, dayOfWeek, startTime, endTime, excludeId);
+            if (!startTime.HasValue || !endTime.HasValue)
+                return false;
+
+            return _unitOfWork.Availabilities.HasOverlappingAvailability(userId, dayOfWeek, startTime.Value, endTime.Value, excludeId);
 
         }
     }

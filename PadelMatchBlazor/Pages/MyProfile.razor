@@ -1,0 +1,104 @@
+﻿@page "/profile"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Services
+@inject UserService UserService
+
+<div class="container-fluid px-4 py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-10">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h2 class="mb-0">Mon Profil</h2>
+                </div>
+                <div class="card-body p-4">
+                    @if (userProfile != null)
+                    {
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                        <span class="fs-3">@userProfile.FirstName[0]@userProfile.LastName[0]</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="mb-1">@userProfile.FirstName @userProfile.LastName</h4>
+                                        <p class="text-muted mb-0">@userProfile.Username</p>
+                                    </div>
+                                </div>
+                                <hr class="my-3">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="bg-light p-3 rounded">
+                                            <strong>Email</strong>
+                                            <p class="mb-0">@userProfile.Email</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="bg-light p-3 rounded">
+                                            <strong>Niveau de compétence</strong>
+                                            <p class="mb-0">@userProfile.SkillLevelName</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="bg-light p-3 rounded">
+                                            <strong>Statut</strong>
+                                            <p class="mb-0">@(userProfile.IsActive ? "Actif" : "Inactif")</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="bg-light p-3 rounded">
+                                            <strong>ID Utilisateur</strong>
+                                            <p class="mb-0">@userProfile.Id</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="bg-light p-3 rounded">
+                                            <strong>Inscrit depuis</strong>
+                                            <p class="mb-0">@userProfile.CreatedAt.ToString("dd/MM/yyyy")</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger">
+                            Impossible de charger le profil utilisateur.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserResponse userProfile;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            userProfile = await UserService.GetCurrentUserProfileAsync();
+            isLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur de chargement : {ex.Message}");
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

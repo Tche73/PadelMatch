@@ -1,0 +1,169 @@
+﻿@page "/edit-reservation/{Id:int}"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models.Requests
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Services
+@inject ReservationService ReservationService
+@inject NavigationManager NavigationManager
+@inject PadelMatchBlazor.Services.CourtService CourtService
+
+<div class="container mt-4">
+    <h2 class="mb-3">Modifier la réservation</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <EditForm Model="@reservationRequest" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label for="court" class="form-label">Terrain</label>
+                        <select id="court" class="form-select" @bind="reservationRequest.CourtId">
+                            @foreach (var court in courts)
+                            {
+                                <option value="@court.Id">@court.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Date</label>
+                        <input id="date" type="date" class="form-control" @bind="selectedDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="startTime" class="form-label">Heure de début</label>
+                        <input id="startTime" type="time" class="form-control" value="@selectedStartTime.ToString(@"hh\:mm")" @onchange="OnTimeChanged" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">Durée</label>
+                        <select id="duration" class="form-select" @bind="duration">
+                            <option value="1">1 heure</option>
+                            <option value="2">2 heures</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" @onclick="GoBack">Annuler</button>
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Traitement...</span>
+                            }
+                            else
+                            {
+                                <span>Enregistrer les modifications</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ReservationRequest reservationRequest = new ReservationRequest();
+    private List<CourtResponse> courts = new List<CourtResponse>();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string errorMessage;
+    private DateTime selectedDate = DateTime.Today;
+    private TimeSpan selectedStartTime;
+    private int duration = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Charger la réservation
+            var reservation = await ReservationService.GetReservationByIdAsync(Id);
+            if (reservation == null || reservation.Id == 0)
+            {
+                errorMessage = "Réservation introuvable";
+                return;
+            }
+
+            // Charger les terrains
+            courts = await CourtService.GetAllCourtsAsync();
+
+            // Initialiser le formulaire
+            reservationRequest.CourtId = reservation.CourtId;
+            selectedDate = reservation.StartDateTime.Date;
+            selectedStartTime = reservation.StartDateTime.TimeOfDay;
+            duration = (int)(reservation.EndDateTime - reservation.StartDateTime).TotalHours;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement de la réservation: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+
+            // Mettre à jour la requête avec les valeurs actuelles
+            reservationRequest.StartTime = selectedDate.Add(selectedStartTime);
+            reservationRequest.EndTime = reservationRequest.StartTime.AddHours(duration);
+
+            var success = await ReservationService.UpdateReservationAsync(Id, reservationRequest);
+            if (success)
+            {
+                NavigationManager.NavigateTo("/my-reservations?updated=true");
+            }
+            else
+            {
+                errorMessage = "Échec de la mise à jour de la réservation";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/my-reservations");
+    }
+
+    private void OnTimeChanged(ChangeEventArgs e)
+    {
+        if (TimeSpan.TryParse((string)e.Value, out TimeSpan result))
+        {
+            selectedStartTime = result;
+        }
+    }
+}

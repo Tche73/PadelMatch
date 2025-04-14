@@ -10,5 +10,6 @@
         public int SkillLevelId { get; set; }
         public string SkillLevelName { get; set; }
         public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

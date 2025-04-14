@@ -21,8 +21,8 @@ namespace Application.Services.Implementations
             _audience = configuration["Jwt:Audience"] ?? throw new ArgumentNullException(nameof(configuration), "JWT audience is not configured");
 
             if (int.TryParse(configuration["Jwt:DurationInMinutes"], out int days))
-                _durationInMinutes = days * 60;
-            else _durationInMinutes = 60;
+                _durationInMinutes = days * 60 * 24;
+            else _durationInMinutes = 1440;
         }
 
         public string GenerateToken(User user)

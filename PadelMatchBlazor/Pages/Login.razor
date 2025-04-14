@@ -80,8 +80,30 @@
     //     // Vérifier si l'utilisateur est déjà connecté
     //     // Si oui, rediriger vers la page d'accueil
     // }
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     // Vérifier si l'utilisateur est déjà connecté
+    //     var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    //     var user = authState.User;
+
+    //     if (user.Identity.IsAuthenticated)
+    //     {
+    //         // L'utilisateur est déjà connecté, rediriger vers la page d'accueil
+    //         NavigationManager.NavigateTo("/");
+    //     }
+    // }
+
     protected override async Task OnInitializedAsync()
     {
+        // Vérifier si l'utilisateur a été redirigé à cause d'un token expiré
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        if (query["expired"] == "true")
+        {
+            errorMessage = "Votre session a expiré. Veuillez vous reconnecter.";
+        }
+
         // Vérifier si l'utilisateur est déjà connecté
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;

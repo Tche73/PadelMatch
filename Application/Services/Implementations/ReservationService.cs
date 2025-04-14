@@ -162,7 +162,7 @@ namespace Application.Services.Implementations
 
         public IEnumerable<Reservation> GetByUserId(int userId)
         {
-            return _unitOfWork.Reservations.GetReservationsByUserId(userId);
+            return _unitOfWork.Reservations.GetByUserId(userId);
         }
 
         public void Update(Reservation reservation)

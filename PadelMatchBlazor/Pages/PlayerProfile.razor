@@ -77,7 +77,7 @@
                                             {
                                                 <tr>
                                                     <td>@GetDayName(availability.DayOfWeek)</td>
-                                                    <td>@availability.StartTime.ToString(@"hh\:mm") - @availability.EndTime.ToString(@"hh\:mm")</td>
+                                                    <td>@availability.StartTime?.ToString(@"hh\:mm") - @availability.EndTime?.ToString(@"hh\:mm")</td>
                                                     <td>@(availability.IsRecurring ? "Oui" : "Non")</td>
                                                 </tr>
                                             }

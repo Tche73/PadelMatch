@@ -209,6 +209,8 @@
 </div>
 
 @code {
+
+    private TimeSpan _minStartTime = DateTime.Now.TimeOfDay;
     private DateTime searchDate = DateTime.Today;
     private List<TimeSpan> timeSlots = new List<TimeSpan>();
     private List<CourtAvailabilityResponse> availabilityData;
@@ -297,8 +299,12 @@
 
     private void NavigateToPreviousDay()
     {
-        searchDate = searchDate.AddDays(-1);
-        SearchAvailability();
+        if (searchDate > DateTime.Today)
+        {
+            searchDate = searchDate.AddDays(-1);
+            SearchAvailability();
+        }      
+    
     }
 
     private void NavigateToNextDay()
@@ -326,46 +332,88 @@
             .ToList();
     }
 
+    // private List<TimeSpan> GetFilteredTimeSlots()
+    // {
+    //     var filteredSlots = new List<TimeSpan>();
+
+    //     // Si les données sont disponibles, extraire les TimeSpan des DateTime
+    //     if (availabilityData != null && availabilityData.Any() &&
+    //         availabilityData[0].AvailableTimeSlots.Any())
+    //     {
+    //         // Extraire les heures uniques des créneaux retournés par l'API
+    //         var uniqueHours = availabilityData
+    //             .SelectMany(c => c.AvailableTimeSlots)
+    //             .Select(s => s.StartTime.TimeOfDay)
+    //             .Distinct()
+    //             .OrderBy(t => t)
+    //             .ToList();
+
+    //         filteredSlots = uniqueHours;
+    //     }
+    //     else
+    //     {
+    //         // Utiliser la génération standard si pas de données
+    //         switch (selectedTimeRange)
+    //         {
+    //             case "morning":
+    //                 filteredSlots = timeSlots.Where(t => t.Hours >= 8 && t.Hours < 12).ToList();
+    //                 break;
+    //             case "afternoon":
+    //                 filteredSlots = timeSlots.Where(t => t.Hours >= 12 && t.Hours < 18).ToList();
+    //                 break;
+    //             case "evening":
+    //                 filteredSlots = timeSlots.Where(t => t.Hours >= 18 && t.Hours < 22).ToList();
+    //                 break;
+    //             case "all":
+    //             default:
+    //                 filteredSlots = timeSlots;
+    //                 break;
+    //         }
+    //     }
+
+    //     return filteredSlots;
+    // }
+
     private List<TimeSpan> GetFilteredTimeSlots()
     {
-        var filteredSlots = new List<TimeSpan>();
+        var allSlots = new List<TimeSpan>();
 
         // Si les données sont disponibles, extraire les TimeSpan des DateTime
         if (availabilityData != null && availabilityData.Any() &&
             availabilityData[0].AvailableTimeSlots.Any())
         {
             // Extraire les heures uniques des créneaux retournés par l'API
-            var uniqueHours = availabilityData
+            allSlots = availabilityData
                 .SelectMany(c => c.AvailableTimeSlots)
                 .Select(s => s.StartTime.TimeOfDay)
                 .Distinct()
                 .OrderBy(t => t)
                 .ToList();
-
-            filteredSlots = uniqueHours;
         }
         else
         {
             // Utiliser la génération standard si pas de données
-            switch (selectedTimeRange)
-            {
-                case "morning":
-                    filteredSlots = timeSlots.Where(t => t.Hours >= 8 && t.Hours < 12).ToList();
-                    break;
-                case "afternoon":
-                    filteredSlots = timeSlots.Where(t => t.Hours >= 12 && t.Hours < 18).ToList();
-                    break;
-                case "evening":
-                    filteredSlots = timeSlots.Where(t => t.Hours >= 18 && t.Hours < 22).ToList();
-                    break;
-                case "all":
-                default:
-                    filteredSlots = timeSlots;
-                    break;
-            }
+            allSlots = timeSlots;
         }
 
-        return filteredSlots;
+        // Filtrage selon la date
+        if (searchDate.Date == DateTime.Today)
+        {
+            allSlots = allSlots.Where(t => t > DateTime.Now.TimeOfDay).ToList();
+        }
+        // Appliquer le filtre de tranche horaire
+        switch (selectedTimeRange)
+        {
+            case "morning":
+                return allSlots.Where(t => t.Hours >= 8 && t.Hours < 12).ToList();
+            case "afternoon":
+                return allSlots.Where(t => t.Hours >= 12 && t.Hours < 18).ToList();
+            case "evening":
+                return allSlots.Where(t => t.Hours >= 18 && t.Hours < 22).ToList();
+            case "all":
+            default:
+                return allSlots;
+        }
     }
 
     private string FormatTimeSlot(TimeSpan time)
@@ -380,24 +428,21 @@
             return $"{time.Hours:D2}:{time.Minutes:D2}";
         }
     }
-    // private List<TimeSpan> GetFilteredTimeSlots()
-    // {
-    //     switch (selectedTimeRange)
-    //     {
-    //         case "morning":
-    //             return timeSlots.Where(t => t.Hours >= 8 && t.Hours < 12).ToList();
-    //         case "afternoon":
-    //             return timeSlots.Where(t => t.Hours >= 12 && t.Hours < 18).ToList();
-    //         case "evening":
-    //             return timeSlots.Where(t => t.Hours >= 18 && t.Hours < 22).ToList();
-    //         case "all":
-    //         default:
-    //             return timeSlots;
-    //     }
-    // }
+
+    
 
     private TimeSlotStatus GetCourtSlotStatus(int courtId, TimeSpan timeSlot)
     {
+        // Si c'est la date d'aujourd'hui, on applique les restrictions d'horaire
+        if (searchDate.Date == DateTime.Today)
+        {
+            // Si le créneau est avant l'heure actuelle, on le déclare indisponible
+            if (timeSlot < DateTime.Now.TimeOfDay)
+            {
+                return TimeSlotStatus.Unavailable;
+            }
+        }
+
         if (availabilityData == null)
             return TimeSlotStatus.Unavailable;
 

@@ -7,6 +7,7 @@ namespace Domain.Interfaces
         IEnumerable<Reservation> GetByCourtId(int courtId);
         IEnumerable<Reservation> GetByDateRange(DateTime start, DateTime end);
         IEnumerable<Reservation> GetReservationsForDate(DateTime date);
-        IEnumerable<Reservation> GetReservationsByUserId(int userId);
+        IEnumerable<Reservation> GetByUserId(int userId);
+       
     }
 }

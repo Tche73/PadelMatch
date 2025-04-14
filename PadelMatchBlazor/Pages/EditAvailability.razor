@@ -1,0 +1,180 @@
+﻿@page "/edit-availability/{Id:int?}"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models.Requests
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Services
+@inject UserAvailabilityService UserAvailabilityService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2 class="mb-3">@(Id.HasValue ? "Modifier" : "Ajouter") une disponibilité</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else
+    {
+        <EditForm Model="@availabilityRequest" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="dayOfWeek" class="form-label">Jour de la semaine</label>
+                <select id="dayOfWeek" class="form-select" @bind="availabilityRequest.DayOfWeek">
+                    @foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+                    {
+                        <option value="@day">@GetDayName(day)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="startTime" class="form-label">Heure de début</label>
+                <input id="startTime" type="time" class="form-control"
+                       @bind-value="startTime"
+                       @bind-value:event="oninput" />
+            </div>
+
+            <div class="mb-3">
+                <label for="endTime" class="form-label">Heure de fin</label>
+                <input id="endTime" type="time" class="form-control"
+                       @bind-value="endTime"
+                       @bind-value:event="oninput" />
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="isRecurring"
+                       @bind="availabilityRequest.IsRecurring" />
+                <label class="form-check-label" for="isRecurring">Disponibilité récurrente</label>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" @onclick="GoBack">Annuler</button>
+                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Traitement...</span>
+                    }
+                    else
+                    {
+                        <span>@(Id.HasValue ? "Mettre à jour" : "Ajouter")</span>
+                    }
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private AvailabilityRequest availabilityRequest = new AvailabilityRequest
+        {
+            IsRecurring = false // Valeur par défaut
+        };
+
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string errorMessage;
+    private List<AvailabilityResponse> availabilities;
+
+    private TimeOnly? startTime;
+    private TimeOnly? endTime;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Charger toutes les disponibilités
+            availabilities = await UserAvailabilityService.GetUserAvailabilitiesAsync();
+
+            if (Id.HasValue)
+            {
+                // Charger la disponibilité existante
+                var availability = availabilities.FirstOrDefault(a => a.Id == Id.Value);
+
+                if (availability == null)
+                {
+                    errorMessage = "Disponibilité introuvable";
+                    return;
+                }
+
+                availabilityRequest.DayOfWeek = (DayOfWeek)availability.DayOfWeek;
+                availabilityRequest.IsRecurring = availability.IsRecurring;
+
+                startTime = availability.StartTime != null
+                    ? TimeOnly.FromTimeSpan(availability.StartTime.Value)
+                    : null;
+                endTime = availability.EndTime != null
+                    ? TimeOnly.FromTimeSpan(availability.EndTime.Value)
+                    : null;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+
+            // Convertir les TimeOnly en TimeSpan
+            availabilityRequest.StartTime = startTime?.ToTimeSpan() ?? TimeSpan.Zero;
+            availabilityRequest.EndTime = endTime?.ToTimeSpan() ?? TimeSpan.Zero;
+
+            // Création de la disponibilité
+            await UserAvailabilityService.CreateUserAvailabilityAsync(availabilityRequest);
+
+            NavigationManager.NavigateTo("/user-availability?saved=true");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/user-availability");
+    }
+
+    private string GetDayName(DayOfWeek day)
+    {
+        return day switch
+        {
+            DayOfWeek.Monday => "Lundi",
+            DayOfWeek.Tuesday => "Mardi",
+            DayOfWeek.Wednesday => "Mercredi",
+            DayOfWeek.Thursday => "Jeudi",
+            DayOfWeek.Friday => "Vendredi",
+            DayOfWeek.Saturday => "Samedi",
+            DayOfWeek.Sunday => "Dimanche",
+            _ => day.ToString()
+        };
+    }
+}

@@ -10,6 +10,7 @@
         public int SkillLevelId { get; set; }
         public string SkillLevelName { get; set; }
         public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
         // Nouvelle propriété pour les disponibilités
         public IEnumerable<AvailabilityResponse> Availabilities { get; set; } = new List<AvailabilityResponse>();
     }

@@ -33,6 +33,11 @@ namespace PadelMatchBlazor.Services
             return await _httpService.GetAsync<IEnumerable<UserResponse>>(queryString.ToString().TrimEnd('&'));
         }
 
+        public async Task<UserResponse> GetCurrentUserProfileAsync()
+        {
+            return await _httpService.GetAsync<UserResponse>("api/users/me");
+        }
+
         // Autres méthodes...
     }
 }

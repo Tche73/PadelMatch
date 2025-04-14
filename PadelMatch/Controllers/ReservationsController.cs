@@ -56,6 +56,21 @@ namespace PadelMatch.Controllers
                 return Forbid();
 
             return Ok(MapToResponse(reservation));
+        }             
+
+        // Si vous voulez aussi pouvoir obtenir les réservations d'un utilisateur spécifique (pour admins)
+        [HttpGet("user/{userId}")]
+        [Authorize(Roles = "Admin")] // Restreindre aux admins
+        public ActionResult<IEnumerable<ReservationResponse>> GetReservationsByUserId(int userId)
+        {
+            var reservations = _reservationService.GetByUserId(userId);
+
+            if (reservations == null || !reservations.Any())
+                return Ok(new List<ReservationResponse>());
+
+            var reservationResponses = reservations.Select(MapToResponse);
+
+            return Ok(reservationResponses);
         }
 
         [HttpGet("court/{courtId}")]

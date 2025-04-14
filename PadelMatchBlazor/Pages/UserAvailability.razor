@@ -1,0 +1,167 @@
+﻿@page "/user-availability"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Models.Responses
+@using PadelMatchBlazor.Services
+
+@inject UserAvailabilityService UserAvailabilityService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2 class="mb-3">Mes Disponibilités</h2>
+
+    <div class="mb-3">
+        <button class="btn btn-primary" @onclick="AddNewAvailability">
+            <i class="bi bi-plus"></i> Ajouter une disponibilité
+        </button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (availabilities.Count == 0)
+    {
+        <div class="alert alert-info">
+            Vous n'avez pas encore de disponibilités.
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var availability in availabilities)
+            {
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@GetDayName(availability.DayOfWeek)</strong>
+                        <span class="ms-2">
+                            @(availability.StartTime?.ToString(@"hh\:mm")) - 
+                            @(availability.EndTime?.ToString(@"hh\:mm"))
+                        </span>
+                        @if (availability.IsRecurring)
+                        {
+                            <span class="badge bg-info ms-2">Récurrent</span>
+                        }
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" 
+                                @onclick="() => EditAvailability(availability.Id)">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                @onclick="() => ConfirmDelete(availability.Id)">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal de confirmation de suppression -->
+@if (showConfirmDeleteModal)
+{
+    <div class="modal" tabindex="-1" style="display:block" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation de suppression</h5>
+                    <button type="button" class="btn-close" @onclick="CancelDelete"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer cette disponibilité ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Annuler</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDeleteAvailability">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<AvailabilityResponse> availabilities = new List<AvailabilityResponse>();
+    private bool isLoading = true;
+    private bool showConfirmDeleteModal = false;
+    private int availabilityToDeleteId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            availabilities = await UserAvailabilityService.GetUserAvailabilitiesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur de chargement : {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void AddNewAvailability()
+    {
+        NavigationManager.NavigateTo("/edit-availability");
+    }
+
+    private void EditAvailability(int id)
+    {
+        NavigationManager.NavigateTo($"/edit-availability/{id}");
+    }
+
+    private void ConfirmDelete(int id)
+    {
+        availabilityToDeleteId = id;
+        showConfirmDeleteModal = true;
+    }
+
+    private void CancelDelete()
+    {
+        showConfirmDeleteModal = false;
+        availabilityToDeleteId = 0;
+    }
+
+    private async Task ConfirmDeleteAvailability()
+    {
+        try
+        {
+            await UserAvailabilityService.DeleteUserAvailabilityAsync(availabilityToDeleteId);
+            
+            // Recharger la liste après suppression
+            availabilities = await UserAvailabilityService.GetUserAvailabilitiesAsync();
+            
+            // Fermer le modal
+            showConfirmDeleteModal = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur de suppression : {ex.Message}");
+            // Optionnel : Ajouter un message d'erreur visible à l'utilisateur
+        }
+    }
+
+    private string GetDayName(int dayOfWeek)
+    {
+        return ((DayOfWeek)dayOfWeek) switch
+        {
+            DayOfWeek.Monday => "Lundi",
+            DayOfWeek.Tuesday => "Mardi",
+            DayOfWeek.Wednesday => "Mercredi",
+            DayOfWeek.Thursday => "Jeudi",
+            DayOfWeek.Friday => "Vendredi",
+            DayOfWeek.Saturday => "Samedi",
+            DayOfWeek.Sunday => "Dimanche",
+            _ => "Jour inconnu"
+        };
+    }
+}

@@ -54,10 +54,10 @@
                     </select>
                 </div>
 
-                <div class="mb-3">
+               @*  <div class="mb-3">
                     <label for="notes" class="form-label">Notes</label>
                     <textarea id="notes" class="form-control" @bind="notes" rows="3"></textarea>
-                </div>
+                </div> *@
 
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-secondary" @onclick="GoBack">Annuler</button>
@@ -86,7 +86,7 @@
     private DateTime selectedDate = DateTime.Today;
     private TimeSpan selectedStartTime;
     private int duration = 1;
-    private string notes = "";
+    // private string notes = "";
 
     private string errorMessage;
     private bool isSubmitting;
@@ -182,7 +182,7 @@
                     CourtId = selectedCourtId,
                     StartTime = selectedDate.Add(selectedStartTime),
                     EndTime = selectedDate.Add(selectedStartTime).AddHours(duration),
-                    Notes = notes
+                    // Notes = notes
                 };
 
             bool success = await ReservationService.CreateReservationAsync(request);
@@ -190,7 +190,7 @@
             if (success)
             {
                 await JSRuntime.InvokeVoidAsync("alert", "Réservation créée avec succès");
-                NavigationManager.NavigateTo("/reservations");
+                NavigationManager.NavigateTo("/my-reservations");
             }
             else
             {

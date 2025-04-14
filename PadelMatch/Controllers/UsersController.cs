@@ -41,6 +41,19 @@ namespace PadelMatch.Controllers
             return Ok(MapToResponse(user));
         }
 
+        [HttpGet("me")]
+        [Authorize]
+        public ActionResult<UserResponse> GetCurrentUserProfile()
+        {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var user = _userService.GetById(currentUserId);
+
+            if (user == null)
+                return NotFound();
+
+            return Ok(MapToResponse(user));
+        }
+
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public ActionResult CreateUserByAdmin(RegisterUserByAdminRequest request)
@@ -171,7 +184,8 @@ namespace PadelMatch.Controllers
                 LastName = user.LastName,
                 SkillLevelId = user.SkillLevelId,
                 SkillLevelName = user.SkillLevel?.Name,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
             };
         }
     }
