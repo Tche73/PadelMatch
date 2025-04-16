@@ -159,6 +159,29 @@ namespace PadelMatch.Controllers
             var userResponses = users.Select(MapToResponse);
             return Ok(userResponses);
         }
+
+        [HttpGet("active")]
+        public ActionResult<IEnumerable<UserResponse>> GetActiveUsers()
+        {
+            var users = _userService.GetActiveUsers(); 
+
+            // Filtrez si nécessaire pour obtenir uniquement les utilisateurs actifs
+            var activeUsers = users.Where(u => u.IsActive).ToList();
+
+            var responses = activeUsers.Select(u => new UserResponse
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                SkillLevelId = u.SkillLevelId,
+                SkillLevelName = u.SkillLevel?.Name,
+                IsActive = u.IsActive
+            }).ToList();
+
+            return Ok(responses);
+        }
         private UserResponse MapDtoToResponse(UserDto userDto)
         {
             return new UserResponse

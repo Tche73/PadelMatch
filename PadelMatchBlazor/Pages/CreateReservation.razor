@@ -36,14 +36,11 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="startTime" class="form-label">Heure de début</label>
-                    <select id="startTime" class="form-select" @bind="selectedStartTime">
-                        <option value="">Sélectionnez l'heure</option>
-                        @foreach (var time in availableTimes)
-                        {
-                            <option value="@time">@time:hh\:mm</option>
-                        }
-                    </select>
+                    <label class="form-label">Heure de début</label>
+                    <div class="form-control-plaintext">
+                        @(selectedStartTime == default ? "Non spécifiée" : string.Format("{0:00}:{1:00}", selectedStartTime.Hours, selectedStartTime.Minutes))
+                    </div>
+                    <input type="hidden" value="@(selectedStartTime == default ? "" : string.Format("{0:00}:{1:00}", selectedStartTime.Hours, selectedStartTime.Minutes))" />
                 </div>
 
                 <div class="mb-3">
@@ -53,11 +50,6 @@
                         <option value="2">2 heures</option>
                     </select>
                 </div>
-
-               @*  <div class="mb-3">
-                    <label for="notes" class="form-label">Notes</label>
-                    <textarea id="notes" class="form-control" @bind="notes" rows="3"></textarea>
-                </div> *@
 
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-secondary" @onclick="GoBack">Annuler</button>
