@@ -49,6 +49,12 @@ namespace PadelMatch.Controllers
         [HttpPost]
         public ActionResult CreateAvailability(CreateAvailabilityRequest request)
         {
+            // Débogage - afficher les détails de la requête
+            Console.WriteLine($"Received Request:");
+            Console.WriteLine($"DayOfWeek: {request.DayOfWeek}");
+            Console.WriteLine($"StartTime: {request.StartTime}");
+            Console.WriteLine($"EndTime: {request.EndTime}");
+            Console.WriteLine($"IsRecurring: {request.IsRecurring}");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             try

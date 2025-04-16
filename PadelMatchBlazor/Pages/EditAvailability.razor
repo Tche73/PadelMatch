@@ -39,16 +39,22 @@
 
             <div class="mb-3">
                 <label for="startTime" class="form-label">Heure de début</label>
-                <input id="startTime" type="time" class="form-control"
-                       @bind-value="startTime"
-                       @bind-value:event="oninput" />
+                <select id="startTime" class="form-select" @bind="selectedStartHour">
+                    @foreach (var hour in availableHours)
+                    {
+                        <option value="@hour">@hour:00</option>
+                    }
+                </select>
             </div>
 
             <div class="mb-3">
                 <label for="endTime" class="form-label">Heure de fin</label>
-                <input id="endTime" type="time" class="form-control"
-                       @bind-value="endTime"
-                       @bind-value:event="oninput" />
+                <select id="endTime" class="form-select" @bind="selectedEndHour">
+                    @foreach (var hour in availableHours)
+                    {
+                        <option value="@hour">@hour:00</option>
+                    }
+                </select>
             </div>
 
             <div class="mb-3 form-check">
@@ -89,8 +95,12 @@
     private string errorMessage;
     private List<AvailabilityResponse> availabilities;
 
-    private TimeOnly? startTime;
-    private TimeOnly? endTime;
+    // Liste des heures disponibles (8h à 22h)
+    private List<int> availableHours = Enumerable.Range(8, 15).ToList();
+
+    // Valeurs sélectionnées dans les listes déroulantes
+    private int selectedStartHour = 8;
+    private int selectedEndHour = 9;
 
     protected override async Task OnInitializedAsync()
     {
@@ -115,12 +125,16 @@
                 availabilityRequest.DayOfWeek = (DayOfWeek)availability.DayOfWeek;
                 availabilityRequest.IsRecurring = availability.IsRecurring;
 
-                startTime = availability.StartTime != null
-                    ? TimeOnly.FromTimeSpan(availability.StartTime.Value)
-                    : null;
-                endTime = availability.EndTime != null
-                    ? TimeOnly.FromTimeSpan(availability.EndTime.Value)
-                    : null;
+                // Récupérer les heures des TimeSpan
+                if (availability.StartTime.HasValue)
+                {
+                    selectedStartHour = availability.StartTime.Value.Hours;
+                }
+
+                if (availability.EndTime.HasValue)
+                {
+                    selectedEndHour = availability.EndTime.Value.Hours;
+                }
             }
         }
         catch (Exception ex)
@@ -139,13 +153,29 @@
         {
             isSubmitting = true;
 
-            // Convertir les TimeOnly en TimeSpan
-            availabilityRequest.StartTime = startTime?.ToTimeSpan() ?? TimeSpan.Zero;
-            availabilityRequest.EndTime = endTime?.ToTimeSpan() ?? TimeSpan.Zero;
+            // Vérifier que l'heure de fin est après l'heure de début
+            if (selectedEndHour <= selectedStartHour)
+            {
+                errorMessage = "L'heure de fin doit être après l'heure de début";
+                isSubmitting = false;
+                return;
+            }
 
-            // Création de la disponibilité
-            await UserAvailabilityService.CreateUserAvailabilityAsync(availabilityRequest);
+            // Convertir les heures en TimeSpan
+            availabilityRequest.StartTime = new TimeSpan(selectedStartHour, 0, 0);
+            availabilityRequest.EndTime = new TimeSpan(selectedEndHour, 0, 0);
 
+            if (Id.HasValue)
+            {
+                // Mise à jour d'une disponibilité existante
+                await UserAvailabilityService.UpdateUserAvailabilityAsync(Id.Value, availabilityRequest);
+            }
+
+            else
+            {
+                // Création d'une nouvelle disponibilité
+                await UserAvailabilityService.CreateUserAvailabilityAsync(availabilityRequest);
+            }
             NavigationManager.NavigateTo("/user-availability?saved=true");
         }
         catch (Exception ex)

@@ -1,0 +1,231 @@
+﻿@page "/create-match/{ReservationId:int}"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using PadelMatchBlazor.Services
+@using PadelMatchBlazor.Models.Requests
+@using PadelMatchBlazor.Models.Responses
+@inject MatchClientService MatchService
+@inject ReservationService ReservationService
+@inject UserService UserService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <h2 class="mb-3">Organiser un match</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Détails de la réservation</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Terrain:</strong> @reservation?.CourtName</p>
+                        <p><strong>Date:</strong> @reservation?.StartDateTime.ToString("dd/MM/yyyy")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Heure:</strong> @reservation?.StartDateTime.ToString("HH:mm") - @reservation?.EndDateTime.ToString("HH:mm")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Sélection des joueurs</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6 border-end">
+                        <h5 class="text-center mb-3">Équipe 1</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Joueur 1</label>
+                            <select class="form-select" @bind="selectedTeam1Player1">
+                                <option value="0">-- Sélectionnez un joueur --</option>
+                                @foreach (var player in availablePlayers)
+                                {
+                                    <option value="@player.Id">@player.Username (@player.SkillLevelName)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Joueur 2</label>
+                            <select class="form-select" @bind="selectedTeam1Player2" disabled="@(selectedTeam1Player1 == 0)">
+                                <option value="0">-- Sélectionnez un joueur --</option>
+                                @foreach (var player in GetAvailablePlayers(selectedTeam1Player1))
+                                {
+                                    <option value="@player.Id">@player.Username (@player.SkillLevelName)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-3">Équipe 2</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Joueur 1</label>
+                            <select class="form-select" @bind="selectedTeam2Player1" disabled="@(selectedTeam1Player2 == 0)">
+                                <option value="0">-- Sélectionnez un joueur --</option>
+                                @foreach (var player in GetAvailablePlayers(selectedTeam1Player1, selectedTeam1Player2))
+                                {
+                                    <option value="@player.Id">@player.Username (@player.SkillLevelName)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Joueur 2</label>
+                            <select class="form-select" @bind="selectedTeam2Player2" disabled="@(selectedTeam2Player1 == 0)">
+                                <option value="0">-- Sélectionnez un joueur --</option>
+                                @foreach (var player in GetAvailablePlayers(selectedTeam1Player1, selectedTeam1Player2, selectedTeam2Player1))
+                                {
+                                    <option value="@player.Id">@player.Username (@player.SkillLevelName)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                @if (selectedTeam1Player1 > 0 && selectedTeam1Player2 > 0 && selectedTeam2Player1 > 0 && selectedTeam2Player2 > 0)
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Une invitation sera envoyée à tous les joueurs sélectionnés. Le match sera confirmé une fois que tous les joueurs auront accepté.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                <i class="fas fa-arrow-left me-2"></i>Annuler
+            </button>
+            <button type="button" class="btn btn-primary" @onclick="CreateNewMatch" disabled="@(!IsFormValid() || isSubmitting)">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Création en cours...</span>
+                }
+                else
+                {
+                    <span><i class="fas fa-check me-2"></i>Créer le match</span>
+                }
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int ReservationId { get; set; }
+
+    private ReservationResponse reservation;
+    private List<UserResponse> availablePlayers = new List<UserResponse>();
+
+    private int selectedTeam1Player1 = 0;
+    private int selectedTeam1Player2 = 0;
+    private int selectedTeam2Player1 = 0;
+    private int selectedTeam2Player2 = 0;
+
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Charger les détails de la réservation
+            var reservationResponse = await ReservationService.GetReservationByIdAsync(ReservationId);
+            if (reservationResponse == null)
+            {
+                errorMessage = "Réservation introuvable";
+                return;
+            }
+
+            reservation = reservationResponse;
+
+            // Charger la liste des joueurs disponibles
+            availablePlayers = await UserService.GetActiveUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private List<UserResponse> GetAvailablePlayers(params int[] excludedIds)
+    {
+        return availablePlayers
+            .Where(p => !excludedIds.Contains(p.Id) || p.Id == 0)
+            .ToList();
+    }
+
+    private bool IsFormValid()
+    {
+        return selectedTeam1Player1 > 0 &&
+               selectedTeam1Player2 > 0 &&
+               selectedTeam2Player1 > 0 &&
+               selectedTeam2Player2 > 0;
+    }
+
+    private async Task CreateNewMatch()
+    {
+        try
+        {
+            isSubmitting = true;
+
+            // Préparer la liste des joueurs
+            var playerIds = new List<int>
+            {
+                selectedTeam1Player1,
+                selectedTeam1Player2,
+                selectedTeam2Player1,
+                selectedTeam2Player2
+            };
+
+            // Créer la requête
+            var request = new CreateMatchRequest
+                {
+                    ReservationId = ReservationId,
+                    PlayerIds = playerIds
+                };
+
+            // Envoyer la requête
+            await MatchService.CreateMatchAsync(request);
+
+            // Rediriger vers la page des matches
+            NavigationManager.NavigateTo("/matches?created=true");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la création du match: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/reservations");
+    }
+}

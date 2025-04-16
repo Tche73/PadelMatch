@@ -96,15 +96,19 @@
     {
         try
         {
-            isLoading = true;
             availabilities = await UserAvailabilityService.GetUserAvailabilitiesAsync();
+
+            // Trier les disponibilités par jour puis par heure
+            availabilities = availabilities
+                .OrderBy(a => (a.DayOfWeek == 0 ? 7 : a.DayOfWeek)) // Pour mettre dimanche (0) à la fin
+                .ThenBy(a => a.StartTime)
+                .ToList();
+
+            isLoading = false;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur de chargement : {ex.Message}");
-        }
-        finally
-        {
             isLoading = false;
         }
     }

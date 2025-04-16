@@ -47,7 +47,7 @@
                 <span class="badge @GetStatusBadgeClass(reservation.Status)">
                     @GetStatusDisplayName(reservation.Status)
                 </span>
-            </div>
+            </div>          
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
@@ -120,7 +120,7 @@
                         <strong>Terrain :</strong> @(reservation?.CourtName)
                     </p>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer">                   
                     <button type="button" class="btn btn-secondary" @onclick="CloseCancelModal">Annuler</button>
                     <button type="button" class="btn btn-danger" @onclick="CancelReservation">Confirmer</button>
                 </div>

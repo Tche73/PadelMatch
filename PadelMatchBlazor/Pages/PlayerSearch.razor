@@ -22,7 +22,7 @@
                 <div class="card-body">
                     <EditForm Model="@searchRequest" OnValidSubmit="HandleSearch">
                         <DataAnnotationsValidator />
-                        
+
                         <div class="form-group mb-3">
                             <label>Niveau de jeu</label>
                             <InputSelect @bind-Value="searchRequest.SkillLevelId" class="form-select">
@@ -55,12 +55,24 @@
 
                         <div class="form-group mb-3">
                             <label>Heure de début</label>
-                            <InputTime @bind-Value="searchRequest.StartTime" CssClass="form-control" />
+                            <select class="form-select" @bind="selectedStartHour">
+                                <option value="">Choisir une heure</option>
+                                @foreach (var hour in availableStartHours)
+                                {
+                                    <option value="@hour">@hour:00</option>
+                                }
+                            </select>
                         </div>
 
                         <div class="form-group mb-3">
                             <label>Heure de fin</label>
-                            <InputTime @bind-Value="searchRequest.EndTime" CssClass="form-control" />
+                            <select class="form-select" @bind="selectedEndHour">
+                                <option value="">Choisir une heure</option>
+                                @foreach (var hour in availableEndHours)
+                                {
+                                    <option value="@hour">@hour:00</option>
+                                }
+                            </select>
                         </div>
 
                         <div class="d-flex justify-content-end">
@@ -113,7 +125,7 @@
                                         <div class="card-body">
                                             <h5 class="card-title">@player.FirstName @player.LastName</h5>
                                             <h6 class="card-subtitle mb-2 text-muted">@player.SkillLevelName</h6>
-                                            
+
                                             @if (player.Availabilities != null && player.Availabilities.Any())
                                             {
                                                 <p class="card-text">
@@ -122,7 +134,7 @@
                                                         <ul class="list-unstyled ms-3">
                                                             @foreach (var availability in player.Availabilities.Take(3))
                                                             {
-                                                                <li>@GetDayName(availability.DayOfWeek): @availability.StartTime?.ToString("hh\\:mm") - @availability.EndTime?.ToString("hh\\:mm")</li>
+                                                                <li>@GetDayName(availability.DayOfWeek): @FormatTimeSpan(availability.StartTime) - @FormatTimeSpan(availability.EndTime)</li>
                                                             }
                                                             @if (player.Availabilities.Count() > 3)
                                                             {
@@ -158,6 +170,14 @@
     private IEnumerable<Models.SkillLevel> skillLevels = new List<Models.SkillLevel>();
     private bool isLoading = false;
 
+    // Liste des heures disponibles (8h à 22h)
+    private List<int> availableStartHours = Enumerable.Range(8, 14).ToList();
+    private List<int> availableEndHours = Enumerable.Range(8, 15).ToList();
+
+    // Valeurs sélectionnées dans les listes déroulantes
+    private int? selectedStartHour;
+    private int? selectedEndHour;
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -189,6 +209,17 @@
         isLoading = true;
         try
         {
+            // Convertir les heures sélectionnées en TimeSpan pour la recherche
+            if (selectedStartHour.HasValue)
+            {
+                searchRequest.StartTime = new TimeSpan(selectedStartHour.Value, 0, 0);
+            }
+
+            if (selectedEndHour.HasValue)
+            {
+                searchRequest.EndTime = new TimeSpan(selectedEndHour.Value, 0, 0);
+            }
+
             players = await UserService.SearchPlayersAsync(searchRequest);
         }
         catch (Exception ex)
@@ -205,6 +236,8 @@
     private void ResetFilters()
     {
         searchRequest = new PlayerSearchRequest();
+        selectedStartHour = null;
+        selectedEndHour = null;
         StateHasChanged();
     }
 
@@ -217,7 +250,7 @@
     {
         NavigationManager.NavigateTo($"/invite/new/{userId}");
     }
-    
+
     private string GetDayName(int dayOfWeek)
     {
         return dayOfWeek switch
@@ -231,5 +264,20 @@
             7 => "Dimanche",
             _ => "Inconnu"
         };
+    }
+
+    private string FormatTimeSpan(TimeSpan? time)
+    {
+        if (!time.HasValue)
+            return "-";
+
+        try
+        {
+            return time.Value.ToString(@"hh\:mm");
+        }
+        catch
+        {
+            return "-";
+        }
     }
 }

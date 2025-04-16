@@ -46,6 +46,15 @@
         <div class="nav-item px-3">
             <AuthorizeView>
                 <Authorized>
+                    <NavLink class="nav-link" href="profile">
+                        <span class="oi oi-calendar" aria-hidden="true"></span> Mon Profil
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+        <div class="nav-item px-3">
+            <AuthorizeView>
+                <Authorized>
                     <NavLink class="nav-link" href="players/search">
                         <span class="oi oi-people" aria-hidden="true"></span> Recherche de Joueurs
                     </NavLink>
@@ -64,8 +73,17 @@
         <div class="nav-item px-3">
             <AuthorizeView>
                 <Authorized>
-                    <NavLink class="nav-link" href="profile">
-                        <span class="oi oi-calendar" aria-hidden="true"></span> Mon Profil
+                    <NavLink class="nav-link" href="user-availability">
+                        <span class="oi oi-calendar" aria-hidden="true"></span> Mes Disponibiltés
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+        <div class="nav-item px-3">
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink class="nav-link" href="create-match">
+                        <span class="oi oi-calendar" aria-hidden="true"></span> Match
                     </NavLink>
                 </Authorized>
             </AuthorizeView>

@@ -23,5 +23,6 @@ namespace Application.Services.Interfaces
         void UpdatePassword(int userid, string newPassword);
         IEnumerable<UserDto> FindCompatiblePlayers(int userId, int skillLevelTolerance = 1);
         IEnumerable<User> SearchPlayers(PlayerSearchRequestDto request);
+        IEnumerable<User> GetActiveUsers();
     }
 }

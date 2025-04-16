@@ -1,5 +1,6 @@
 ﻿using PadelMatchBlazor.Models.Requests;
 using PadelMatchBlazor.Models.Responses;
+using System.Net.Http;
 using System.Text;
 
 namespace PadelMatchBlazor.Services
@@ -38,6 +39,12 @@ namespace PadelMatchBlazor.Services
             return await _httpService.GetAsync<UserResponse>("api/users/me");
         }
 
+        public async Task<List<UserResponse>> GetActiveUsersAsync()
+        {
+            var users = await _httpService.GetAsync<List<UserResponse>>("api/users/active");
+            return users ?? new List<UserResponse>();
+
+        }
         // Autres méthodes...
     }
 }

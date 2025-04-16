@@ -1,0 +1,250 @@
+﻿@page "/matches"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.WebUtilities
+@using PadelMatchBlazor.Services
+@using PadelMatchBlazor.Models.Responses
+@using Domain.Enums
+@inject MatchClientService MatchService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Mes matches</h2>
+        <a href="/reservations" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nouvelle réservation
+        </a>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (!matches.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Vous n'avez pas encore de matches. Créez une réservation pour organiser un match.
+        </div>
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Rechercher..." @bind="searchTerm" @bind:event="oninput" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <select class="form-select" @bind="statusFilter">
+                    <option value="-1">Tous les statuts</option>
+                    <option value="@((int)MatchStatus.Pending)">En attente</option>
+                    <option value="@((int)MatchStatus.Confirmed)">Confirmé</option>
+                    <option value="@((int)MatchStatus.InProgress)">En cours</option>
+                    <option value="@((int)MatchStatus.Completed)">Terminé</option>
+                    <option value="@((int)MatchStatus.Cancelled)">Annulé</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach (var match in FilteredMatches())
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 @GetCardClass(match.Status)">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Match #@match.Id</h5>
+                            <span class="badge @GetStatusBadgeClass(match.Status)">@GetStatusLabel(match.Status)</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                <strong>Date:</strong> @match.StartDateTime.ToString("dd/MM/yyyy HH:mm") - @match.EndDateTime.ToString("HH:mm")
+                            </div>
+                            <div class="mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                <strong>Terrain:</strong> @match.CourtName
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 border-end">
+                                    <h6 class="text-center mb-2">Équipe 1</h6>
+                                    <ul class="list-group list-group-flush">
+                                        @foreach (var player in match.Players.Where(p => p.Team == 1))
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                @player.Username
+                                                @if (player.IsConfirmed)
+                                                {
+                                                    <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning rounded-pill"><i class="fas fa-clock"></i></span>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-center mb-2">Équipe 2</h6>
+                                    <ul class="list-group list-group-flush">
+                                        @foreach (var player in match.Players.Where(p => p.Team == 2))
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                @player.Username
+                                                @if (player.IsConfirmed)
+                                                {
+                                                    <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning rounded-pill"><i class="fas fa-clock"></i></span>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between">
+                                <a href="/match-details/@match.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-info-circle me-1"></i>Détails
+                                </a>
+                                @if (match.Status == MatchStatus.Pending)
+                                {
+                                    <button class="btn btn-sm btn-success" @onclick="() => ConfirmMatch(match.Id)">
+                                        <i class="fas fa-check me-1"></i>Confirmer
+                                    </button>
+                                }
+                                @if (match.Status == MatchStatus.InProgress)
+                                {
+                                    <a href="/complete-match/@match.Id" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-trophy me-1"></i>Terminer
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<MatchResponse> matches = new List<MatchResponse>();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private string searchTerm = string.Empty;
+    private int statusFilter = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMatches();
+
+        // Vérifier si un message de succès doit être affiché
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("created", out var created) && created == "true")
+        {
+            successMessage = "Le match a été créé avec succès.";
+        }
+    }
+
+    private async Task LoadMatches()
+    {
+        try
+        {
+            isLoading = true;
+            matches = await MatchService.GetMatchesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors du chargement des matches: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ConfirmMatch(int matchId)
+    {
+        try
+        {
+            await MatchService.ChangeMatchStatusAsync(matchId, MatchStatus.Confirmed);
+            successMessage = "Le match a été confirmé avec succès.";
+            await LoadMatches();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur lors de la confirmation du match: {ex.Message}";
+        }
+    }
+
+    private IEnumerable<MatchResponse> FilteredMatches()
+    {
+        return matches
+            .Where(m => string.IsNullOrEmpty(searchTerm) ||
+                         m.CourtName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                         m.Players.Any(p => p.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+            .Where(m => statusFilter == -1 || (int)m.Status == statusFilter)
+            .ToList();
+    }
+
+    private string GetCardClass(MatchStatus status)
+    {
+        return status switch
+        {
+            MatchStatus.Completed => "border-success",
+            MatchStatus.Cancelled => "border-danger",
+            MatchStatus.InProgress => "border-primary",
+            _ => ""
+        };
+    }
+
+    private string GetStatusBadgeClass(MatchStatus status)
+    {
+        return status switch
+        {
+            MatchStatus.Pending => "bg-warning",
+            MatchStatus.Confirmed => "bg-info",
+            MatchStatus.InProgress => "bg-primary",
+            MatchStatus.Completed => "bg-success",
+            MatchStatus.Cancelled => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusLabel(MatchStatus status)
+    {
+        return status switch
+        {
+            MatchStatus.Pending => "En attente",
+            MatchStatus.Confirmed => "Confirmé",
+            MatchStatus.InProgress => "En cours",
+            MatchStatus.Completed => "Terminé",
+            MatchStatus.Cancelled => "Annulé",
+            _ => status.ToString()
+        };
+    }
+}

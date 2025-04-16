@@ -20,7 +20,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SkillLevelService>();
 builder.Services.AddScoped<CourtService>();
 builder.Services.AddScoped<UserAvailabilityService>();
-//builder.Services.AddScoped<AuthorizationMessageHandler>();
+builder.Services.AddScoped<MatchClientService>();   
 builder.Services.AddScoped(sp =>
 {
     var localStorage = sp.GetRequiredService<ILocalStorageService>();

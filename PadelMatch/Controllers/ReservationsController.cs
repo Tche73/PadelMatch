@@ -56,7 +56,7 @@ namespace PadelMatch.Controllers
                 return Forbid();
 
             return Ok(MapToResponse(reservation));
-        }             
+        }
 
         // Si vous voulez aussi pouvoir obtenir les réservations d'un utilisateur spécifique (pour admins)
         [HttpGet("user/{userId}")]

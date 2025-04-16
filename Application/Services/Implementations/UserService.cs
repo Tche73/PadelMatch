@@ -142,73 +142,6 @@ namespace Application.Services.Implementations
 
             return _findCompatiblePlayersQueryHandler.Handle(query);
         }
-
-        // Ajoutez cette méthode à votre classe UserService existante
-        //public IEnumerable<User> SearchPlayers(PlayerSearchRequestDto request)
-        //{
-        //    var query = _unitOfWork.Users.GetAll().Where(u => u.IsActive).AsQueryable();
-
-        //    // Filtrer par niveau de compétence si spécifié
-        //    if (request.SkillLevelId.HasValue)
-        //    {
-        //        int minLevel = request.SkillLevelId.Value - (request.SkillLevelTolerance ?? 1);
-        //        int maxLevel = request.SkillLevelId.Value + (request.SkillLevelTolerance ?? 1);
-
-        //        // S'assurer que les niveaux ne sont pas négatifs
-        //        minLevel = Math.Max(1, minLevel);
-
-        //        query = query.Where(u => u.SkillLevelId >= minLevel && u.SkillLevelId <= maxLevel);
-        //    }
-
-        //    // Exclure l'utilisateur actuel
-        //    if (request.CurrentUserId.HasValue)
-        //    {
-        //        query = query.Where(u => u.Id != request.CurrentUserId.Value);
-        //    }
-
-        //    // Récupérer les utilisateurs filtrés
-        //    var filteredUsers = query.ToList();
-
-        //    // Si des critères de disponibilité sont spécifiés, filtrer davantage
-        //    if (request.DayOfWeek.HasValue || request.StartTime.HasValue || request.EndTime.HasValue)
-        //    {
-        //        filteredUsers = filteredUsers.Where(u =>
-        //            HasCompatibleAvailability(u.Id, request.DayOfWeek, request.StartTime, request.EndTime)).ToList();
-        //    }
-
-        //    return filteredUsers;
-        //}
-
-        //private bool HasCompatibleAvailability(int userId, int? dayOfWeek, TimeSpan? startTime, TimeSpan? endTime)
-        //{
-        //    // Cette méthode vérifie si l'utilisateur a des disponibilités compatibles
-        //    var availabilities = _unitOfWork.Availabilities.GetByUserId(userId);
-
-        //    if (!dayOfWeek.HasValue && !startTime.HasValue && !endTime.HasValue)
-        //        return true;
-
-        //    // Si seul le jour est spécifié, vérifier uniquement le jour
-        //    if (dayOfWeek.HasValue && !startTime.HasValue && !endTime.HasValue)
-        //    {
-        //        return availabilities.Any(a => a.DayOfWeek == dayOfWeek.Value);
-        //    }
-
-        //    // Si le jour et au moins une heure sont spécifiés
-        //    return availabilities.Any(a =>
-        //        (!dayOfWeek.HasValue || a.DayOfWeek == dayOfWeek.Value) &&
-        //        (
-        //            // Si les deux heures sont spécifiées, vérifier le chevauchement
-        //            (startTime.HasValue && endTime.HasValue &&
-        //             ((a.StartTime <= startTime.Value && a.EndTime > startTime.Value) ||
-        //              (a.StartTime < endTime.Value && a.EndTime >= endTime.Value) ||
-        //              (a.StartTime >= startTime.Value && a.EndTime <= endTime.Value))) ||
-
-        //            // Si seulement l'heure de début est spécifiée
-        //            (startTime.HasValue && !endTime.HasValue && a.EndTime > startTime.Value) ||
-
-        //            // Si seulement l'heure de fin est spécifiée
-        //            (!startTime.HasValue && endTime.HasValue && a.StartTime < endTime.Value)
-        //        ));
         public IEnumerable<User> SearchPlayers(PlayerSearchRequestDto request)
         {
             Console.WriteLine($"SearchPlayers appelé avec DayOfWeek={request.DayOfWeek}");
@@ -279,6 +212,11 @@ namespace Application.Services.Implementations
             return availabilities.Any(a =>
                 (!startTime.HasValue || a.StartTime <= startTime.Value) &&
                 (!endTime.HasValue || a.EndTime >= endTime.Value));
-        }    
+        }
+
+        public IEnumerable<User> GetActiveUsers()
+        {
+            return _unitOfWork.Users.Find(u => u.IsActive).ToList();
+        }
     }
 }

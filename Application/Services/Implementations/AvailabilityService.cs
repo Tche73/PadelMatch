@@ -47,16 +47,31 @@ namespace Application.Services.Implementations
 
         public void Update(Availability availability)
         {
-            // Vérifier s'il y a des chevauchements, en excluant cette disponibilité
-            if (HasOverlappingAvailability(availability.UserId, availability.DayOfWeek, availability.StartTime, availability.EndTime, availability.Id))
-            {
-                throw new InvalidOperationException("Cette disponibilité chevauche une disponibilité existante");
-            }
+            // Récupérer la disponibilité existante pour vérifier qu'elle existe
+            var existingAvailability = _unitOfWork.Availabilities.GetById(availability.Id);
+            if (existingAvailability == null)
+                throw new InvalidOperationException("Disponibilité introuvable");
 
+            // Récupérer TOUTES les autres disponibilités de l'utilisateur SAUF celle en cours de modification
+            var otherAvailabilities = _unitOfWork.Availabilities
+                .GetByUserId(availability.UserId)
+                .Where(a => a.Id != availability.Id)
+                .ToList();
+
+            // Vérifier les chevauchements uniquement avec les autres disponibilités
+            var isOverlapping = otherAvailabilities.Any(a =>
+                a.DayOfWeek == availability.DayOfWeek &&
+                ((a.StartTime <= availability.StartTime && a.EndTime > availability.StartTime) ||
+                 (a.StartTime < availability.EndTime && a.EndTime >= availability.EndTime) ||
+                 (a.StartTime >= availability.StartTime && a.EndTime <= availability.EndTime)));
+
+            if (isOverlapping)
+                throw new InvalidOperationException("Cette disponibilité chevauche une disponibilité existante");
+
+            // Mettre à jour
             _unitOfWork.Availabilities.Update(availability);
             _unitOfWork.Complete();
         }
-
         public void Delete(int id)
         {
             _unitOfWork.Availabilities.Delete(id);

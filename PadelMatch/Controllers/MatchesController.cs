@@ -11,10 +11,13 @@ namespace PadelMatch.Controllers
     {
         private readonly IMatchService _matchService;
         private readonly IReservationService _reservationService;
-        public MatchesController(IMatchService matchService, IReservationService reservationService)
+        private readonly IUserService _userService;
+
+        public MatchesController(IMatchService matchService, IReservationService reservationService, IUserService userService)
         {
             _matchService = matchService;
             _reservationService = reservationService;
+            _userService = userService; 
         }
 
         [HttpGet]
@@ -80,6 +83,29 @@ namespace PadelMatch.Controllers
             });
 
             return Ok(opponentResponses);
+        }
+
+        [HttpGet("active")]
+        public ActionResult<IEnumerable<UserResponse>> GetActiveUsers()
+        {
+            var users = _userService.GetActiveUsers();
+
+            if (users == null)
+                return NotFound();
+
+            var responses = users.Select(u => new UserResponse
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                SkillLevelId = u.SkillLevelId,
+                SkillLevelName = u.SkillLevel?.Name,
+                IsActive = u.IsActive
+            }).ToList();
+
+            return Ok(responses);
         }
 
         [HttpPost]

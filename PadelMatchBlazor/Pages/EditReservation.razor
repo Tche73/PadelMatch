@@ -47,7 +47,12 @@
 
                     <div class="mb-3">
                         <label for="startTime" class="form-label">Heure de début</label>
-                        <input id="startTime" type="time" class="form-control" value="@selectedStartTime.ToString(@"hh\:mm")" @onchange="OnTimeChanged" />
+                        <select id="startTime" class="form-select" @bind="selectedStartHour">
+                            @foreach (var hour in availableHours)
+                            {
+                                <option value="@hour">@hour:00</option>
+                            }
+                        </select>
                     </div>
 
                     <div class="mb-3">
@@ -88,8 +93,11 @@
     private bool isSubmitting = false;
     private string errorMessage;
     private DateTime selectedDate = DateTime.Today;
-    private TimeSpan selectedStartTime;
+    private int selectedStartHour = 8;
     private int duration = 1;
+
+    // Liste des heures disponibles (8h à 22h)
+    private List<int> availableHours = Enumerable.Range(8, 15).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,7 +119,7 @@
             // Initialiser le formulaire
             reservationRequest.CourtId = reservation.CourtId;
             selectedDate = reservation.StartDateTime.Date;
-            selectedStartTime = reservation.StartDateTime.TimeOfDay;
+            selectedStartHour = reservation.StartDateTime.Hour;
             duration = (int)(reservation.EndDateTime - reservation.StartDateTime).TotalHours;
         }
         catch (Exception ex)
@@ -130,8 +138,11 @@
         {
             isSubmitting = true;
 
+            // Créer un TimeSpan à partir de l'heure sélectionnée
+            var startTime = new TimeSpan(selectedStartHour, 0, 0);
+
             // Mettre à jour la requête avec les valeurs actuelles
-            reservationRequest.StartTime = selectedDate.Add(selectedStartTime);
+            reservationRequest.StartTime = selectedDate.Add(startTime);
             reservationRequest.EndTime = reservationRequest.StartTime.AddHours(duration);
 
             var success = await ReservationService.UpdateReservationAsync(Id, reservationRequest);
@@ -157,13 +168,5 @@
     private void GoBack()
     {
         NavigationManager.NavigateTo("/my-reservations");
-    }
-
-    private void OnTimeChanged(ChangeEventArgs e)
-    {
-        if (TimeSpan.TryParse((string)e.Value, out TimeSpan result))
-        {
-            selectedStartTime = result;
-        }
     }
 }
