@@ -9,7 +9,7 @@
 @inject IJSRuntime JSRuntime
 
 <div class="container mt-4">
-    <h2 class="mb-3">Nouvelle réservation</h2>
+    <h2 class="mb-3">Confirmation de réservation</h2>
 
     @if (errorMessage != null)
     {
@@ -20,19 +20,27 @@
         <div class="card-body">
             <form @onsubmit="HandleSubmit">
                 <div class="mb-3">
-                    <label for="court" class="form-label">Terrain</label>
-                    <select id="court" class="form-select" @bind="selectedCourtId">
-                        <option value="0">Sélectionnez un terrain</option>
-                        @foreach (var court in courts)
-                        {
-                            <option value="@court.Id">@court.Name</option>
-                        }
-                    </select>
+                    <label class="form-label">Terrain</label>
+                    <div class="form-control-plaintext">
+                        @(courts.FirstOrDefault(c => c.Id == selectedCourtId)?.Name ?? "Non spécifié")
+                    </div>
+                    <input type="hidden" value="@selectedCourtId" />
                 </div>
 
                 <div class="mb-3">
-                    <label for="date" class="form-label">Date</label>
-                    <input id="date" type="date" class="form-control" @bind="selectedDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <label class="form-label">Date</label>
+                    <div class="form-control-plaintext">
+                        @selectedDate.ToString("dddd d MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))
+                    </div>
+                    <input type="hidden" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Durée</label>
+                    <div class="form-control-plaintext">
+                        @duration heure(s)
+                    </div>
+                    <input type="hidden" value="@duration" />
                 </div>
 
                 <div class="mb-3">
@@ -44,14 +52,13 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="duration" class="form-label">Durée</label>
-                    <select id="duration" class="form-select" @bind="duration">
-                        <option value="1">1 heure</option>
-                        <option value="2">2 heures</option>
-                    </select>
+                    <label class="form-label">Heure de fin</label>
+                    <div class="form-control-plaintext">
+                        @(selectedStartTime == default ? "Non spécifiée" : string.Format("{0:00}:{1:00}", selectedStartTime.Add(TimeSpan.FromHours(duration)).Hours, selectedStartTime.Add(TimeSpan.FromHours(duration)).Minutes))
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mt-4">
                     <button type="button" class="btn btn-secondary" @onclick="GoBack">Annuler</button>
                     <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
                         @if (isSubmitting)
@@ -61,7 +68,7 @@
                         }
                         else
                         {
-                            <span>Réserver</span>
+                            <span>Confirmer la réservation</span>
                         }
                     </button>
                 </div>
@@ -72,14 +79,10 @@
 
 @code {
     private List<CourtResponse> courts = new List<CourtResponse>();
-    private List<TimeSpan> availableTimes = new List<TimeSpan>();
-
     private int selectedCourtId;
     private DateTime selectedDate = DateTime.Today;
     private TimeSpan selectedStartTime;
     private int duration = 1;
-    // private string notes = "";
-
     private string errorMessage;
     private bool isSubmitting;
 
@@ -102,9 +105,6 @@
                 };
             }
 
-            // Générer les heures disponibles par défaut
-            GenerateAvailableTimes();
-
             // Vérifier les paramètres d'URL
             var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
@@ -122,21 +122,25 @@
                     selectedStartTime = date.TimeOfDay;
                 }
             }
+
+            if (int.TryParse(query["duration"], out int durationParam) && (durationParam == 1 || durationParam == 2))
+            {
+                duration = durationParam;
+            }
+
+            // Validation initiale
+            if (selectedCourtId <= 0)
+            {
+                errorMessage = "Aucun terrain n'a été sélectionné. Veuillez retourner à la page des disponibilités.";
+            }
+            else if (selectedStartTime == default)
+            {
+                errorMessage = "Aucune heure de début n'a été spécifiée. Veuillez retourner à la page des disponibilités.";
+            }
         }
         catch (Exception ex)
         {
             errorMessage = $"Erreur lors du chargement initial: {ex.Message}";
-        }
-    }
-
-    private void GenerateAvailableTimes()
-    {
-        availableTimes.Clear();
-
-        // Créneaux de 8h à 21h
-        for (int hour = 8; hour <= 21; hour++)
-        {
-            availableTimes.Add(new TimeSpan(hour, 0, 0));
         }
     }
 
@@ -173,8 +177,7 @@
                 {
                     CourtId = selectedCourtId,
                     StartTime = selectedDate.Add(selectedStartTime),
-                    EndTime = selectedDate.Add(selectedStartTime).AddHours(duration),
-                    // Notes = notes
+                    EndTime = selectedDate.Add(selectedStartTime).AddHours(duration)
                 };
 
             bool success = await ReservationService.CreateReservationAsync(request);

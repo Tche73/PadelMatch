@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\images\padel.png" />
+  </ItemGroup>
+
 </Project>

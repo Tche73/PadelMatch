@@ -3,25 +3,276 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="container mt-5">
-            <div class="jumbotron">
-                <h3 class="display-8">Bienvenue sur PadelMatch</h3>
-                <h5>Bonjour @context.User.Identity?.Name, vous êtes maintenant connecté !</h5>
-                <hr class="my-4">
-                <p>Vous pouvez maintenant accéder à toutes les fonctionnalités de l'application.</p>
-                <a class="btn btn-primary btn-lg" href="/courts/availability">Voir les terrains disponibles</a>
+        <!-- Dashboard pour les utilisateurs connectés -->
+        <div class="hero bg-primary text-white py-5 mb-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <h1 class="display-6 fw-bold">Bienvenue, @context.User.Identity?.Name !</h1>
+                        <p class="lead">Votre plateforme de padel vous attend.</p>
+                        <p class="lead">Organisez vos matches, réservez vos terrains et retrouvez vos partenaires.</p>
+                        <div class="d-flex gap-3 mt-4">
+                            <a href="/courts/availability" class="btn btn-light btn-lg fw-bold">
+                                <i class="bi bi-calendar-plus me-2"></i>Réserver un terrain
+                            </a>
+                            <a href="/matches" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-trophy me-2"></i>Mes matches
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-5 d-none d-md-block">
+                        <img src="images/padel.png" alt="Joueur de padel" class="img-fluid rounded-3" style="max-height: 350px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-primary bg-gradient text-white mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
+                                <i class="bi bi-calendar-week fs-4"></i>
+                            </div>
+                            <h3 class="fs-4 fw-bold">Prochains créneaux</h3>
+                            <p class="text-muted">Consultez vos réservations à venir et organisez votre planning.</p>
+                            <a href="/my-reservations" class="btn btn-outline-primary">Voir mes réservations</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-success bg-gradient text-white mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
+                                <i class="bi bi-people-fill fs-4"></i>
+                            </div>
+                            <h3 class="fs-4 fw-bold">Trouver des joueurs</h3>
+                            <p class="text-muted">Recherchez des partenaires selon leur niveau et disponibilités.</p>
+                            <a href="/players/search" class="btn btn-outline-success">Rechercher</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-info bg-gradient text-white mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 60px; height: 60px;">
+                                <i class="bi bi-graph-up fs-4"></i>
+                            </div>
+                            <h3 class="fs-4 fw-bold">Mes statistiques</h3>
+                            <p class="text-muted">Suivez votre progression et analysez vos performances.</p>
+                            <a href="/statistics" class="btn btn-outline-info">Consulter</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-light py-5">
+            <div class="container">
+                <h2 class="text-center mb-4 fw-bold">Dernières actualités</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <img src="images/padel6.jpg" class="card-img-top" alt="Tournoi">
+                            <div class="card-body">
+                                <h5 class="card-title">Tournoi mensuel</h5>
+                                <p class="card-text">Inscriptions ouvertes pour le tournoi du mois prochain. Ne manquez pas cette opportunité !</p>
+                                <a href="#" class="btn btn-sm btn-primary">En savoir plus</a>
+                            </div>
+                            <div class="card-footer bg-transparent text-muted">
+                                <small>Il y a 2 jours</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <img src="images/padel7.jpg" class="card-img-top" alt="Nouveaux terrains">
+                            <div class="card-body">
+                                <h5 class="card-title">Nouveaux terrains disponibles</h5>
+                                <p class="card-text">Découvrez nos deux nouveaux terrains extérieurs avec surface premium.</p>
+                                <a href="#" class="btn btn-sm btn-primary">En savoir plus</a>
+                            </div>
+                            <div class="card-footer bg-transparent text-muted">
+                                <small>Il y a 5 jours</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <img src="images/padel8.jpg" class="card-img-top" alt="Coaching">
+                            <div class="card-body">
+                                <h5 class="card-title">Séances de coaching</h5>
+                                <p class="card-text">Améliorez votre jeu avec nos nouveaux coachs certifiés. Réservez maintenant !</p>
+                                <a href="#" class="btn btn-sm btn-primary">En savoir plus</a>
+                            </div>
+                            <div class="card-footer bg-transparent text-muted">
+                                <small>Il y a 1 semaine</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>
     <NotAuthorized>
-        <div class="container mt-5">
-            <div class="jumbotron">
-                <h1 class="display-6">Bienvenue sur PadelMatch</h1>
-                <p class="lead">Connectez-vous pour accéder aux fonctionnalités de l'application.</p>
-                <hr class="my-4">
-                <p>PadelMatch vous permet de réserver des terrains et de trouver des partenaires pour jouer au padel.</p>
-                <a class="btn btn-primary btn-lg" href="/login">Se connecter</a>
-                <a class="btn btn-outline-primary btn-lg" href="/register">S'inscrire</a>
+        <!-- Page d'accueil pour visiteurs -->
+        <div class="hero bg-primary text-white py-5 mb-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h1 class="display-6 fw-bold mb-3">PadelMatch</h1>
+                        <p class="lead fs-4 mb-4">Votre plateforme de réservation de padel tout-en-un. Trouvez des terrains, des partenaires et organisez vos matches en quelques clics.</p>
+                        <div class="d-flex gap-3">
+                            <a href="/login" class="btn btn-light btn-lg fw-bold">Se connecter</a>
+                            <a href="/register" class="btn btn-outline-light btn-lg">S'inscrire</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 d-none d-lg-block">
+                        <img src="images/padel.png" alt="Joueur de padel" class="img-fluid rounded-3" style="max-height: 350px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            <h2 class="text-center fw-bold mb-5">Pourquoi choisir PadelMatch ?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-primary bg-gradient text-white mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px;"> 
+                                <i class="bi bi-search fs-3"></i>
+                            </div>
+                            <h3 class="fs-4 fw-bold">Réservation facile</h3>
+                            <p class="text-muted">Trouvez et réservez votre terrain en quelques clics. Visualisez toutes les disponibilités en temps réel.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-success bg-gradient text-white mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px;">
+                                <i class="bi bi-people fs-3"></i>
+                            </div>
+                            <h3 class="fs-4 fw-bold">Communauté de joueurs</h3>
+                            <p class="text-muted">Rejoignez des milliers de joueurs, trouvez des partenaires de votre niveau et organisez des matches.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon bg-info bg-gradient text-white mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle" style="width: 70px; height: 70px;">
+                                <i class="bi bi-trophy fs-3"></i>
+                            </div>
+                            <h3 class="fs-4 fw-bold">Compétitions et tournois</h3>
+                            <p class="text-muted">Participez à des tournois, suivez vos statistiques et améliorez votre classement.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-light py-5 mb-5">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-4 mb-lg-0">
+                        <h2 class="fw-bold mb-3">Une expérience complète</h2>
+                        <p class="lead mb-4">PadelMatch vous offre tout ce dont vous avez besoin pour profiter pleinement de votre passion :</p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Réservation de terrains en ligne</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Recherche de partenaires par niveau</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Organisation de matches et tournois</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Suivi de vos statistiques et progression</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Communauté active de joueurs</li>
+                        </ul>
+                        <a href="/register" class="btn btn-primary btn-lg mt-3">Rejoindre maintenant</a>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="images/padel2.png" alt="Application PadelMatch" class="img-fluid rounded-3">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            <h2 class="text-center fw-bold mb-5">Témoignages</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex mb-3">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                            </div>
+                            <p class="mb-3">"PadelMatch a transformé ma façon de jouer au padel. Plus besoin d'appeler les clubs, tout se fait en ligne et c'est tellement simple !"</p>
+                            <div class="d-flex align-items-center">
+                                <img src="images/padel4.jpg" alt="Sophie M." class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Sophie M.</h6>
+                                    <small class="text-muted">Joueuse depuis 2 ans</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex mb-3">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning"></i>
+                            </div>
+                            <p class="mb-3">"J'ai pu rencontrer des joueurs de mon niveau et participer à des tournois. C'est exactement ce qu'il me fallait pour progresser !"</p>
+                            <div class="d-flex align-items-center">
+                                <img src="images/padel3.jpg" alt="Thomas L." class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Thomas L.</h6>
+                                    <small class="text-muted">Joueur depuis 1 an</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex mb-3">
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                <i class="bi bi-star-half text-warning"></i>
+                            </div>
+                            <p class="mb-3">"En tant que gérant de club, PadelMatch nous a permis d'optimiser nos réservations et d'attirer de nouveaux joueurs. Un outil indispensable !"</p>
+                            <div class="d-flex align-items-center">
+                                <img src="images/padel5.jpg" alt="Marc D." class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Marc D.</h6>
+                                    <small class="text-muted">Gérant de club</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-primary text-white text-center py-5">
+            <div class="container">
+                <h2 class="fw-bold mb-4">Prêt à rejoindre la communauté ?</h2>
+                <p class="lead mb-4">Inscrivez-vous dès maintenant et commencez à profiter de tous les avantages de PadelMatch.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="/register" class="btn btn-light btn-lg fw-bold">S'inscrire gratuitement</a>
+                    <a href="/login" class="btn btn-outline-light btn-lg">Se connecter</a>
+                </div>
             </div>
         </div>
     </NotAuthorized>

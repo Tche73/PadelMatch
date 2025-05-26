@@ -6,11 +6,9 @@ namespace Infrastructures.Data
 {
     public class PadelMatchDbContext : DbContext
     {
-        public PadelMatchDbContext(DbContextOptions<PadelMatchDbContext> options) 
+        public PadelMatchDbContext(DbContextOptions<PadelMatchDbContext> options)
             : base(options)
-        {
-        }
-
+        { }
         public DbSet<User> Users { get; set; }
         public DbSet<SkillLevel> SkillLevels { get; set; }
         public DbSet<Availability> Availabilities { get; set; }
@@ -19,7 +17,12 @@ namespace Infrastructures.Data
         public DbSet<Match> Matches { get; set; }
         public DbSet<MatchPlayer> MatchPlayers { get; set; }
         public DbSet<PlayerStats> PlayerStats { get; set; }
-              
+
+
+
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -71,5 +74,6 @@ namespace Infrastructures.Data
                 .WithMany(a => a.Availabilities)
                 .HasForeignKey(a => a.UserId);
         }
-    }    
+
+    }
 }

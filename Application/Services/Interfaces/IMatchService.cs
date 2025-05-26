@@ -12,6 +12,7 @@ namespace Application.Services.Interfaces
     {
         Match GetById(int id);
         IEnumerable<Match> GetByUserId(int userId);
+        IEnumerable<Match> GetByUserIdWithPlayers(int userId);
         void Create(Match match, List<int> playerIds);
         void AddPlayer(int matchId, int userId, int team);
         void RemovePlayer(int matchId, int userId);
@@ -20,5 +21,6 @@ namespace Application.Services.Interfaces
         void UpdatePlayerStats(int userId, bool isWin);
         User GetPartner(int matchId, int userId);
         IEnumerable<User> GetOpponents(int matchId, int userId);
+        IEnumerable<Match> GetUserMatches(int userId);
     }
 }

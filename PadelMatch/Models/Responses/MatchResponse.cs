@@ -11,6 +11,10 @@ namespace PadelMatch.Models.Responses
         public string CourtName { get; set; }
         public DateTime CreatedAt { get; set; }
         public MatchStatus Status { get; set; }
-        public List<MatchPlayerResponse> Players { get; set; }
+        public List<MatchPlayerResponse> Players { get; set; }  
+        public List<MatchPlayerResponse> Team1Players { get; set; }
+        public List<MatchPlayerResponse> Team2Players { get; set; }
+        public int CreatedBy { get; set; }
+        public string CreatorUsername { get; set; }
     }
 }

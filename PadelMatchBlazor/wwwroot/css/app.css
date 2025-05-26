@@ -98,6 +98,22 @@ a, .btn-link {
         content: var(--blazor-load-percentage-text, "Loading");
     }
 
+.bg-success-subtle {
+    background-color: rgba(25, 135, 84, 0.15) !important;
+}
+
+.bg-danger-subtle {
+    background-color: rgba(220, 53, 69, 0.15)!important;
+}
+
+.slot-available {
+    background-color: rgba(25, 135, 84, 0.15);
+}
+
+.slot-reserved {
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
 code {
     color: #c02d76;
 }

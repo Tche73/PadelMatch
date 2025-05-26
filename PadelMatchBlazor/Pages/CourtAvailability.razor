@@ -134,13 +134,14 @@
                             {
                                 <tr>
                                     <td class="text-center align-middle fw-bold bg-light">
-                                        @* @timeSlot.ToString(@"HH\:mm") - @timeSlot.Add(TimeSpan.FromHours(1)).ToString(@"HH\:mm") *@
                                         @FormatTimeSlot(timeSlot) - @FormatTimeSlot(timeSlot.Add(TimeSpan.FromHours(1)))
                                     </td>
                                     @foreach (var court in GetFilteredCourts())
                                     {
                                         var slotStatus = GetCourtSlotStatus(court.CourtId, timeSlot);
+                                        var nextSlotStatus = GetCourtSlotStatus(court.CourtId, timeSlot.Add(TimeSpan.FromHours(1)));
                                         bool isAvailable = slotStatus == TimeSlotStatus.Available;
+                                        bool isNextHourAvailable = nextSlotStatus == TimeSlotStatus.Available;
                                         string cellClass = GetCellClass(isAvailable);
                                         string cellTitle = isAvailable ? $"Disponible - Cliquez pour réserver" : "Ce créneau est déjà réservé";
 
@@ -151,13 +152,21 @@
 
                                             @if (isAvailable)
                                             {
-                                                <div>
+                                                <div class="mb-2">
                                                     <span class="badge bg-success mb-2">
                                                         <i class="bi bi-check-circle me-1"></i> Disponible
                                                     </span>
-                                                    <button class="btn btn-sm btn-outline-primary d-block mx-auto mt-1 reserve-btn">
-                                                        <i class="bi bi-calendar-plus me-1"></i> Réserver
-                                                    </button>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-sm btn-outline-primary reserve-btn" @onclick="() => HandleCellClick(court.CourtId, timeSlot, isAvailable, 1)">
+                                                            <i class="bi bi-calendar-plus me-1"></i> 1h
+                                                        </button>
+                                                        @if (isNextHourAvailable)
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-primary reserve-btn" @onclick="() => HandleCellClick(court.CourtId, timeSlot, isAvailable, 2)">
+                                                                <i class="bi bi-calendar-plus me-1"></i> 2h
+                                                            </button>
+                                                        }
+                                                    </div>
                                                 </div>
                                             }
                                             else
@@ -209,7 +218,6 @@
 </div>
 
 @code {
-
     private TimeSpan _minStartTime = DateTime.Now.TimeOfDay;
     private DateTime searchDate = DateTime.Today;
     private List<TimeSpan> timeSlots = new List<TimeSpan>();
@@ -303,8 +311,8 @@
         {
             searchDate = searchDate.AddDays(-1);
             SearchAvailability();
-        }      
-    
+        }
+
     }
 
     private void NavigateToNextDay()
@@ -321,58 +329,13 @@
         // Si aucun filtre, retourner tous les terrains
         if (string.IsNullOrEmpty(selectedCourtType))
             return availabilityData;
-
-        // Sinon, filtrer par type (intérieur/extérieur)
-        // Note: on utilise un modèle simpliste où les terrains avec ID pair sont intérieurs
-        // et les terrains avec ID impair sont extérieurs
+                    
         bool isIndoor = selectedCourtType == "indoor";
 
         return availabilityData
-            .Where(c => isIndoor ? c.CourtId % 2 == 0 : c.CourtId % 2 != 0)
+            .Where(c => isIndoor ? c.CourtId == 1 || c.CourtId == 2 : c.CourtId == 3 || c.CourtId == 4)
             .ToList();
     }
-
-    // private List<TimeSpan> GetFilteredTimeSlots()
-    // {
-    //     var filteredSlots = new List<TimeSpan>();
-
-    //     // Si les données sont disponibles, extraire les TimeSpan des DateTime
-    //     if (availabilityData != null && availabilityData.Any() &&
-    //         availabilityData[0].AvailableTimeSlots.Any())
-    //     {
-    //         // Extraire les heures uniques des créneaux retournés par l'API
-    //         var uniqueHours = availabilityData
-    //             .SelectMany(c => c.AvailableTimeSlots)
-    //             .Select(s => s.StartTime.TimeOfDay)
-    //             .Distinct()
-    //             .OrderBy(t => t)
-    //             .ToList();
-
-    //         filteredSlots = uniqueHours;
-    //     }
-    //     else
-    //     {
-    //         // Utiliser la génération standard si pas de données
-    //         switch (selectedTimeRange)
-    //         {
-    //             case "morning":
-    //                 filteredSlots = timeSlots.Where(t => t.Hours >= 8 && t.Hours < 12).ToList();
-    //                 break;
-    //             case "afternoon":
-    //                 filteredSlots = timeSlots.Where(t => t.Hours >= 12 && t.Hours < 18).ToList();
-    //                 break;
-    //             case "evening":
-    //                 filteredSlots = timeSlots.Where(t => t.Hours >= 18 && t.Hours < 22).ToList();
-    //                 break;
-    //             case "all":
-    //             default:
-    //                 filteredSlots = timeSlots;
-    //                 break;
-    //         }
-    //     }
-
-    //     return filteredSlots;
-    // }
 
     private List<TimeSpan> GetFilteredTimeSlots()
     {
@@ -429,8 +392,6 @@
         }
     }
 
-    
-
     private TimeSlotStatus GetCourtSlotStatus(int courtId, TimeSpan timeSlot)
     {
         // Si c'est la date d'aujourd'hui, on applique les restrictions d'horaire
@@ -470,6 +431,20 @@
         {
             var date = searchDate.Add(timeSlot);
             NavigationManager.NavigateTo($"/reservations/create?courtId={courtId}&date={date:yyyy-MM-ddTHH:mm:ss}");
+        }
+        else
+        {
+            // Peut-être afficher un message que le créneau est déjà réservé
+            JSRuntime.InvokeVoidAsync("alert", $"Le terrain {courtId} est déjà réservé à {timeSlot}");
+        }
+    }
+
+    private void HandleCellClick(int courtId, TimeSpan timeSlot, bool isAvailable, int duration)
+    {
+        if (isAvailable)
+        {
+            var date = searchDate.Add(timeSlot);
+            NavigationManager.NavigateTo($"/reservations/create?courtId={courtId}&date={date:yyyy-MM-ddTHH:mm:ss}&duration={duration}");
         }
         else
         {

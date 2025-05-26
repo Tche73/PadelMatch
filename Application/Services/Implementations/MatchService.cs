@@ -60,8 +60,7 @@ namespace Application.Services.Implementations
             _unitOfWork.MatchPlayers.Add(matchPlayer);
             _unitOfWork.Complete();
 
-        }
-
+        }      
         public void ChangeStatus(int id, MatchStatus status)
         {
             var match = _unitOfWork.Matches.GetById(id);
@@ -263,6 +262,55 @@ namespace Application.Services.Implementations
             _unitOfWork.PlayerStats.UpdatePlayerStats(userId, isWin);
         }
 
-       
+        public IEnumerable<Match> GetUserMatches(int userId)
+        {
+            // Obtenez les matchs où l'utilisateur est joueur
+            var matchesAsPlayer = _unitOfWork.MatchPlayers
+                .Find(mp => mp.UserId == userId)
+                .Select(mp => mp.MatchId);
+
+            // Récupérez les matchs complets
+            return _unitOfWork.Matches
+                .Find(m => matchesAsPlayer.Contains(m.Id) ||
+                      m.Reservation.CreatedBy == userId)
+                .ToList();
+        }
+
+        public IEnumerable<Match> GetByUserIdWithPlayers(int userId)
+        {
+            // Obtenez les IDs des matchs où l'utilisateur est joueur
+            var matchesAsPlayer = _unitOfWork.MatchPlayers
+                .Find(mp => mp.UserId == userId)
+                .Select(mp => mp.MatchId);
+
+            // Récupérez les matchs avec leurs joueurs et créateur
+            var matchIds = matchesAsPlayer.ToList();
+            var matches = new List<Match>();
+
+            foreach (var id in matchIds)
+            {
+                var match = _unitOfWork.Matches.GetByIdWithPlayers(id);
+                if (match != null)
+                    matches.Add(match);
+            }
+
+            // Ajouter également les matchs créés par l'utilisateur
+            var createdMatches = _unitOfWork.Matches
+                .Find(m => m.CreatedBy == userId)
+                .ToList();
+
+            foreach (var match in createdMatches)
+            {
+                // Si le match n'est pas déjà dans la liste
+                if (!matches.Any(m => m.Id == match.Id))
+                {
+                    var matchWithPlayers = _unitOfWork.Matches.GetByIdWithPlayers(match.Id);
+                    if (matchWithPlayers != null)
+                        matches.Add(matchWithPlayers);
+                }
+            }
+
+            return matches;
+        }
     }
 }

@@ -76,6 +76,14 @@
                                     <button class="btn btn-sm btn-outline-info" @onclick="() => ViewDetails(reservation.Id)">
                                         Détails
                                     </button>
+                                    @if (reservation.Status != ReservationStatus.Cancelled &&
+                                        reservation.Status != ReservationStatus.Completed &&
+                                        reservation.StartDateTime > DateTime.Now)
+                                        {
+                                            <a href="/create-match/@reservation.Id" class="btn btn-sm btn-outline-success ms-1">
+                                                <i class="bi bi-people"></i> Organiser match
+                                            </a>
+                                        }
                                 </div>
                             </td>
                         </tr>
@@ -229,5 +237,10 @@
                 CloseCancelModal();
             }
         }
+    }
+
+    private bool CanCreateMatch(ReservationResponse reservation)
+    {
+        return reservation.Status == ReservationStatus.Booked && reservation.StartDateTime > DateTime.Now;
     }
 }

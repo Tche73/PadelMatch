@@ -22,10 +22,15 @@ namespace Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         [Required]
+        [ForeignKey("Creator")]
+        public int CreatedBy { get; set; }
+
+        [Required]
         public MatchStatus Status { get; set; }
 
         // Propriétés de navigation
         public virtual Reservation Reservation { get; set; }
         public virtual ICollection<MatchPlayer> MatchPlayers { get; set; }
+        public virtual User Creator { get; set; }
     }
 }

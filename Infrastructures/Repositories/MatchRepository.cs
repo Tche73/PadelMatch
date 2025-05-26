@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructures.Data;
+using Microsoft.EntityFrameworkCore;
 using DomainMatch = Domain.Entities.Match;
 
 
@@ -10,6 +11,14 @@ namespace Infrastructures.Repositories
     {
         public MatchRepository(PadelMatchDbContext context) : base(context)
         {
+        }
+
+        public DomainMatch GetByIdWithPlayers(int id)
+        {
+            return _context.Set<DomainMatch>()
+            .Include(m => m.MatchPlayers)
+                .ThenInclude(mp => mp.User)
+            .FirstOrDefault(m => m.Id == id);
         }
 
         public IEnumerable<DomainMatch> GetByUserId(int userId)
@@ -42,7 +51,28 @@ namespace Infrastructures.Repositories
                 .ToList();
         }
 
+        public IEnumerable<DomainMatch> GetAllWithPlayers()
+        {
+            return _context.Set<DomainMatch>()
+                .Include(m => m.MatchPlayers)
+                    .ThenInclude(mp => mp.User)
+                .Include(m => m.Creator)
+                .Include(m => m.Reservation)
+                    .ThenInclude(r => r.Court)
+                .ToList();
+        }
 
+        public IEnumerable<DomainMatch> GetMatchesWithPlayers(List<int> matchIds)
+        {
+            return _context.Matches
+                .Where(m => matchIds.Contains(m.Id))
+                .Include(m => m.MatchPlayers)
+                    .ThenInclude(mp => mp.User)
+                .Include(m => m.Creator)
+                .Include(m => m.Reservation)
+                    .ThenInclude(r => r.Court)
+                .ToList();
+        }
         public User GetPartners(int matchId, int userId)
         {
             var playerTeam = _context.MatchPlayers

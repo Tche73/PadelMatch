@@ -5,14 +5,16 @@
 @using PadelMatchBlazor.Services
 @using PadelMatchBlazor.Models.Responses
 @using Domain.Enums
+@using System.Security.Claims
 @inject MatchClientService MatchService
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Mes matches</h2>
-        <a href="/reservations" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Nouvelle réservation
+        <a href="/my-reservations" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Organiser un match
         </a>
     </div>
 
@@ -90,7 +92,7 @@
                                         @foreach (var player in match.Players.Where(p => p.Team == 1))
                                         {
                                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                @player.Username
+                                                @player.FirstName @player.LastName
                                                 @if (player.IsConfirmed)
                                                 {
                                                     <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
@@ -109,7 +111,7 @@
                                         @foreach (var player in match.Players.Where(p => p.Team == 2))
                                         {
                                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                @player.Username
+                                                @player.FirstName @player.LastName
                                                 @if (player.IsConfirmed)
                                                 {
                                                     <span class="badge bg-success rounded-pill"><i class="fas fa-check"></i></span>
@@ -157,9 +159,15 @@
     private string successMessage = string.Empty;
     private string searchTerm = string.Empty;
     private int statusFilter = -1;
+    private string currentTab = "all";
+    private int userId;
 
     protected override async Task OnInitializedAsync()
     {
+        // Obtenez l'ID utilisateur depuis le service d'authentification
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        userId = int.Parse(authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                
         await LoadMatches();
 
         // Vérifier si un message de succès doit être affiché
@@ -203,12 +211,22 @@
 
     private IEnumerable<MatchResponse> FilteredMatches()
     {
-        return matches
-            .Where(m => string.IsNullOrEmpty(searchTerm) ||
-                         m.CourtName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                         m.Players.Any(p => p.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-            .Where(m => statusFilter == -1 || (int)m.Status == statusFilter)
-            .ToList();
+        var filtered = matches.Where(m =>
+            string.IsNullOrEmpty(searchTerm) ||
+            m.CourtName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            m.Players.Any(p => p.Username.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        );
+
+        if (statusFilter != -1)
+            filtered = filtered.Where(m => (int)m.Status == statusFilter);
+
+        // Filtrer selon l'onglet sélectionné
+        if (currentTab == "organized")
+            filtered = filtered.Where(m => m.Players.Any(p => p.UserId == userId && p.IsOrganizer));
+        else if (currentTab == "participating")
+            filtered = filtered.Where(m => m.Players.Any(p => p.UserId == userId && !p.IsOrganizer));
+
+        return filtered.ToList();
     }
 
     private string GetCardClass(MatchStatus status)
@@ -246,5 +264,11 @@
             MatchStatus.Cancelled => "Annulé",
             _ => status.ToString()
         };
+    }
+
+    private void ChangeTab(string tab)
+    {
+        currentTab = tab;
+        StateHasChanged();
     }
 }
